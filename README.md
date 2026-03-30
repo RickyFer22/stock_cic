@@ -128,3 +128,16 @@ Notas:
 - `is_active` acepta `true/false`, `1/0`, `si/no`.
 - Ítems: el import no modifica `stock_actual` (se gestiona por movimientos).
 - Beneficiarios: el import hace upsert por `dni` para evitar duplicados.
+
+## Auto-sync GitHub -> VPS
+
+El VPS quedó configurado para sincronizar este repositorio cada minuto:
+
+- Script: `/usr/local/bin/stock-cic-sync.sh`
+- Cron: `* * * * * /bin/bash /usr/local/bin/stock-cic-sync.sh >> /var/log/stock-cic-sync.log 2>&1`
+- Repo remoto: `https://github.com/RickyFer22/stock_cic.git`
+
+Comportamiento:
+
+- Si hay commit nuevo en `main`, el VPS hace `git reset --hard origin/main` y ejecuta `docker compose --env-file .env up -d --build`.
+- Si no hay cambios, solo registra `no changes` en el log.
