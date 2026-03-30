@@ -26,7 +26,7 @@ Si aparece el mensaje de que Docker no puede conectarse al Engine, iniciá Docke
 - Frontend: `http://localhost:8080`
 - Health backend: `http://localhost:8080/health`
 
-Usuario inicial: `admin` (la contraseña inicial se define en el seed del esquema; cambiar en producción).
+No hay usuarios demo por defecto. El primer usuario debe crearlo un administrador del sistema.
 
 ## Despliegue en VPS (producción)
 
@@ -100,10 +100,10 @@ docker compose start backend
 
 ## Nota de seguridad operativa
 
-- Cambiar la contraseña del usuario `admin`:
+- Alta inicial de usuario administrador (si la base está vacía):
 
 ```bash
-docker compose exec db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "UPDATE users SET password_hash = crypt('NUEVA_CLAVE', gen_salt('bf', 10)) WHERE username='admin';"
+docker compose exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "INSERT INTO users (username, email, full_name, role, password_hash, is_active) VALUES ('gestion_admin','admin@municipio.local','Administrador Stock CIC','admin', crypt('CAMBIAR_CLAVE_SEGURA', gen_salt('bf', 10)), true);"
 ```
 
 ## Importación y exportación Excel

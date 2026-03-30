@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import EmptyState from '../components/EmptyState'
+import HowToCard from '../components/HowToCard'
 import { apiGet } from '../api/client'
 
 type MovementRow = {
@@ -65,6 +66,14 @@ export default function MovementsPage() {
   return (
     <div className="space-y-5">
       {header}
+      <HowToCard
+        title="Guia rapida de movimientos"
+        steps={[
+          'Paso 1: filtra por tipo para acotar resultados.',
+          'Paso 2: busca por codigo, articulo, operador o nota.',
+          'Paso 3: valida cantidades positivas y negativas para detectar errores.',
+        ]}
+      />
       
       <div className="bg-white/80 backdrop-blur-md border border-white/60 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
         <input

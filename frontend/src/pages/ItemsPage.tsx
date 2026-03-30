@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import EmptyState from '../components/EmptyState'
+import HowToCard from '../components/HowToCard'
 import Modal from '../components/Modal'
 import { apiDownload, apiGet, apiUploadExcel, apiPost } from '../api/client'
 
@@ -266,6 +267,14 @@ export default function ItemsPage() {
   return (
     <div className="space-y-5">
       {header}
+      <HowToCard
+        title="Guia rapida de articulos"
+        steps={[
+          'Paso 1: crea articulos con codigo unico.',
+          'Paso 2: usa Ingresar o Egresar stock para actualizar cantidades.',
+          'Paso 3: exporta reportes para control y auditoria.',
+        ]}
+      />
 
       <div className="bg-white/80 backdrop-blur-md border border-white/60 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
         <input

@@ -2,7 +2,7 @@ import { FormEvent, useMemo, useState } from 'react'
 import { setToken } from '../api/client'
 
 export default function LoginPage({ onLoggedIn }: { onLoggedIn: () => void }) {
-  const [username, setUsername] = useState('admin')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -160,7 +160,7 @@ export default function LoginPage({ onLoggedIn }: { onLoggedIn: () => void }) {
               </button>
 
               <div className="pt-5 border-t border-slate-200/60 mt-6 text-xs text-slate-500 leading-relaxed text-center">
-                Usuarios iniciales: <b>admin</b>, <b>supervisor</b>, <b>operador</b>. Contraseña inicial: <b>cambiar-esta-clave</b> (cambiar en producción).
+                Si no recordás tu acceso, solicitá restablecimiento al administrador del sistema.
               </div>
             </form>
           </div>

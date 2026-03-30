@@ -217,37 +217,8 @@ INSERT INTO categories (name) VALUES
   ('Limpieza')
 ON CONFLICT DO NOTHING;
 
-INSERT INTO users (username, email, full_name, role, password_hash, is_active)
-VALUES (
-  'admin',
-  'admin@sanroque.local',
-  'Administrador del Sistema',
-  'admin',
-  crypt('cambiar-esta-clave', gen_salt('bf', 10)),
-  true
-)
-ON CONFLICT (username) DO NOTHING;
-
-INSERT INTO users (username, email, full_name, role, password_hash, is_active)
-VALUES (
-  'supervisor',
-  'supervisor@sanroque.local',
-  'Supervisor de Stock',
-  'supervisor',
-  crypt('cambiar-esta-clave', gen_salt('bf', 10)),
-  true
-)
-ON CONFLICT (username) DO NOTHING;
-
-INSERT INTO users (username, email, full_name, role, password_hash, is_active)
-VALUES (
-  'operador',
-  'operador@sanroque.local',
-  'Operador de Acción Social',
-  'operador',
-  crypt('cambiar-esta-clave', gen_salt('bf', 10)),
-  true
-)
-ON CONFLICT (username) DO NOTHING;
+-- Importante: no se crean usuarios por defecto.
+-- El alta de usuarios se realiza desde el panel Supervisor (admin)
+-- o mediante script SQL controlado por el equipo de sistemas.
 
 COMMIT;

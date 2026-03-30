@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import EmptyState from '../components/EmptyState'
+import HowToCard from '../components/HowToCard'
 import Modal from '../components/Modal'
 import { apiGet, apiPost, apiPut } from '../api/client'
 
@@ -46,14 +47,15 @@ type InventoryHealth = {
   itemsExpiring: Array<{ id: string; name: string; code: string; stock_actual: number; expiry_date: string }>
 }
 
-export default function SupervisorPage() {
+export default function SupervisorPage({ role }: { role: 'admin' | 'supervisor' }) {
+  const isAdmin = role === 'admin'
   const [users, setUsers] = useState<UserRow[]>([])
   const [catStats, setCatStats] = useState<StockCategoryStat[]>([])
   const [movStats, setMovStats] = useState<MovementStat[]>([])
   const [dashboard, setDashboard] = useState<DashboardSummary | null>(null)
   const [health, setHealth] = useState<InventoryHealth | null>(null)
   
-  const [loadingUsers, setLoadingUsers] = useState(true)
+  const [loadingUsers, setLoadingUsers] = useState(isAdmin)
   const [loadingStats, setLoadingStats] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
@@ -105,9 +107,13 @@ export default function SupervisorPage() {
   }
 
   useEffect(() => {
-    loadUsers()
+    if (isAdmin) {
+      loadUsers()
+    } else {
+      setLoadingUsers(false)
+    }
     loadStats()
-  }, [])
+  }, [isAdmin])
 
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -133,7 +139,7 @@ export default function SupervisorPage() {
     return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
   }
 
-  if (loadingUsers && loadingStats) return <EmptyState icon="⏳" message="Cargando" sub="Obteniendo panel de control..." />
+  if (loadingStats || (isAdmin && loadingUsers)) return <EmptyState icon="⏳" message="Cargando" sub="Obteniendo panel de control..." />
   if (error) return <EmptyState icon="⚠️" message="Error" sub={error} />
 
   return (
@@ -143,16 +149,26 @@ export default function SupervisorPage() {
           <h1 className="font-display font-black text-brand-green-900 text-3xl uppercase tracking-wider">Panel de Supervisor</h1>
           <p className="text-slate-600 mt-1 font-medium text-sm">Control de acceso de usuarios y métricas del sistema.</p>
         </div>
-        <button
-          onClick={() => {
-            setUserFormData({ role: 'operador', is_active: true, full_name: '', username: '', email: '' })
-            setShowUserForm(true)
-          }}
-          className="px-5 py-2.5 rounded-xl bg-brand-gold-500 text-brand-green-900 font-bold tracking-wide uppercase text-sm hover:brightness-110 shadow-md transition-all self-start sm:self-auto"
-        >
-          + Nuevo Usuario
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => {
+              setUserFormData({ role: 'operador', is_active: true, full_name: '', username: '', email: '' })
+              setShowUserForm(true)
+            }}
+            className="px-5 py-2.5 rounded-xl bg-brand-gold-500 text-brand-green-900 font-bold tracking-wide uppercase text-sm hover:brightness-110 shadow-md transition-all self-start sm:self-auto"
+          >
+            + Nuevo Usuario
+          </button>
+        )}
       </div>
+      <HowToCard
+        title="Guia rapida de supervisor"
+        steps={[
+          'Paso 1: revisa metricas y alertas para detectar riesgos de stock.',
+          'Paso 2: valida actividad de movimientos recientes.',
+          isAdmin ? 'Paso 3: administra usuarios desde el bloque final.' : 'Paso 3: solicita a un admin los cambios de usuarios.',
+        ]}
+      />
 
       {/* Métricas principales */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -338,60 +354,66 @@ export default function SupervisorPage() {
       </div>
 
       {/* Control de Usuarios */}
-      <div className="bg-white/80 backdrop-blur-md border border-white/60 rounded-[2rem] shadow-card overflow-hidden">
-        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-          <h2 className="text-lg font-bold font-display text-brand-green-900 tracking-wide uppercase">Control de Usuarios</h2>
-          <span className="bg-slate-100 text-slate-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">{users.length} Registros</span>
-        </div>
-        <div className="overflow-auto scrollbar-hide">
-          <table className="min-w-full text-sm">
-            <thead className="bg-slate-50/50">
-              <tr className="text-left text-slate-500 uppercase tracking-wider text-xs">
-                <th className="px-5 py-4 font-bold">Usuario</th>
-                <th className="px-5 py-4 font-bold">Nombre Completo</th>
-                <th className="px-5 py-4 font-bold">Rol</th>
-                <th className="px-5 py-4 font-bold">Estado</th>
-                <th className="px-5 py-4 font-bold text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {users.map(u => (
-                <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-5 py-4 font-bold text-brand-green-900">{u.username}</td>
-                  <td className="px-5 py-4 text-slate-700">{u.full_name}</td>
-                  <td className="px-5 py-4">
-                    <span className={`px-2.5 py-1 rounded-md text-xs font-bold tracking-widest uppercase items-center ${
-                      u.role === 'admin' ? 'bg-rose-100 text-rose-700' :
-                      u.role === 'supervisor' ? 'bg-amber-100 text-amber-700' :
-                      'bg-slate-100 text-slate-600'
-                    }`}>
-                      {u.role}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    {u.is_active ? (
-                      <span className="text-emerald-600 font-bold bg-emerald-50 px-2 py-1 flex items-center w-max rounded-md text-xs uppercase tracking-wider"><span className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>Activo</span>
-                    ) : (
-                      <span className="text-rose-600 font-bold bg-rose-50 px-2 py-1 flex items-center w-max rounded-md text-xs uppercase tracking-wider"><span className="w-2 h-2 rounded-full bg-rose-500 mr-2"></span>Inactivo</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-4 text-right">
-                    <button 
-                      onClick={() => {
-                        setUserFormData({ ...u, password: '' })
-                        setShowUserForm(true)
-                      }}
-                      className="text-brand-green-600 hover:text-brand-green-800 font-bold text-xs uppercase tracking-widest border border-brand-green-200 px-3 py-1.5 rounded-lg hover:bg-brand-green-50 transition-all"
-                    >
-                      Editar
-                    </button>
-                  </td>
+      {isAdmin ? (
+        <div className="bg-white/80 backdrop-blur-md border border-white/60 rounded-[2rem] shadow-card overflow-hidden">
+          <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+            <h2 className="text-lg font-bold font-display text-brand-green-900 tracking-wide uppercase">Control de Usuarios</h2>
+            <span className="bg-slate-100 text-slate-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">{users.length} Registros</span>
+          </div>
+          <div className="overflow-auto scrollbar-hide">
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-50/50">
+                <tr className="text-left text-slate-500 uppercase tracking-wider text-xs">
+                  <th className="px-5 py-4 font-bold">Usuario</th>
+                  <th className="px-5 py-4 font-bold">Nombre Completo</th>
+                  <th className="px-5 py-4 font-bold">Rol</th>
+                  <th className="px-5 py-4 font-bold">Estado</th>
+                  <th className="px-5 py-4 font-bold text-right">Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {users.map(u => (
+                  <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-5 py-4 font-bold text-brand-green-900">{u.username}</td>
+                    <td className="px-5 py-4 text-slate-700">{u.full_name}</td>
+                    <td className="px-5 py-4">
+                      <span className={`px-2.5 py-1 rounded-md text-xs font-bold tracking-widest uppercase items-center ${
+                        u.role === 'admin' ? 'bg-rose-100 text-rose-700' :
+                        u.role === 'supervisor' ? 'bg-amber-100 text-amber-700' :
+                        'bg-slate-100 text-slate-600'
+                      }`}>
+                        {u.role}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      {u.is_active ? (
+                        <span className="text-emerald-600 font-bold bg-emerald-50 px-2 py-1 flex items-center w-max rounded-md text-xs uppercase tracking-wider"><span className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>Activo</span>
+                      ) : (
+                        <span className="text-rose-600 font-bold bg-rose-50 px-2 py-1 flex items-center w-max rounded-md text-xs uppercase tracking-wider"><span className="w-2 h-2 rounded-full bg-rose-500 mr-2"></span>Inactivo</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <button
+                        onClick={() => {
+                          setUserFormData({ ...u, password: '' })
+                          setShowUserForm(true)
+                        }}
+                        className="text-brand-green-600 hover:text-brand-green-800 font-bold text-xs uppercase tracking-widest border border-brand-green-200 px-3 py-1.5 rounded-lg hover:bg-brand-green-50 transition-all"
+                      >
+                        Editar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 font-medium">
+          Gestion de usuarios disponible solo para rol admin.
+        </div>
+      )}
 
       {showUserForm && (
         <Modal title={userFormData.id ? "Editar Usuario" : "Nuevo Usuario"} onClose={() => setShowUserForm(false)}>
