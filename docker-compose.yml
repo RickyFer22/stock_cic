@@ -1,0 +1,91 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-san_roque_stock}
+      POSTGRES_USER: ${POSTGRES_USER:-sanroque}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sanroque_change_me}
+      TZ: ${TZ:-America/Buenos_Aires}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/src/database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 4000
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      JWT_SECRET: ${JWT_SECRET:-dev_change_me}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-san_roque_stock}
+      POSTGRES_USER: ${POSTGRES_USER:-sanroque}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sanroque_change_me}
+      TZ: ${TZ:-America/Buenos_Aires}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - default
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.http.routers.${PROJECT_NAME:-stockcic}.rule=Host(`${DOMAIN:-stockcic.munisanroque.ar}`)"
+      - "traefik.http.routers.${PROJECT_NAME:-stockcic}.entrypoints=websecure"
+      - "traefik.http.routers.${PROJECT_NAME:-stockcic}.tls.certresolver=letsencrypt"
+      - "traefik.http.services.${PROJECT_NAME:-stockcic}.loadbalancer.server.port=80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Backup cada 24h (servicio adicional solicitado). Guarda en ./backups del VPS.
+  db_backup:
+    image: postgres:16
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB:-san_roque_stock}
+      PGUSER: ${POSTGRES_USER:-sanroque}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-sanroque_change_me}
+      BACKUP_DIR: /backups
+      TZ: ${TZ:-America/Buenos_Aires}
+    volumes:
+      - ./scripts/backup.sh:/scripts/backup.sh:ro
+      - ./backups:/backups
+    command: ["bash", "-lc", "while true; do bash /scripts/backup.sh; sleep 86400; done"]
+
+volumes:
+  pgdata:
+
+networks:
+  web:
+    external: true

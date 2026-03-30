@@ -1,0 +1,27 @@
+# Entorno
+.env
+.env.local
+.env.production
+
+# Dependencias
+node_modules/
+*/node_modules/
+
+# Build outputs
+dist/
+frontend/dist/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backups locales (no commitear)
+backups/
+COPIA DE SEG/
+
+# Certificados SSL locales
+nginx/certs/
