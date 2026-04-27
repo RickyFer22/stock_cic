@@ -1,6 +1,6 @@
 import Modal from './Modal'
 
-type Tab = 'distributions' | 'items' | 'movements' | 'supervisor'
+type Tab = 'distributions' | 'items' | 'movements' | 'supervisor' | 'soporte'
 
 type HelpPanelProps = {
   open: boolean
@@ -40,6 +40,14 @@ const HELP_BY_TAB: Record<Tab, { title: string; steps: string[] }> = {
       'Revisa metricas de salud de stock y actividad de los ultimos 30 dias.',
       'Si eres admin, gestiona usuarios desde "Control de usuarios".',
       'Usa este panel para decidir compras, ajustes y prioridades.',
+    ],
+  },
+  soporte: {
+    title: 'Como usar Soporte Técnico',
+    steps: [
+      'Usa "+ Abrir Nuevo Ticket" para reportar problemas.',
+      'El equipo de Modernización te responderá a la brevedad.',
+      'Puedes revisar el historial de respuestas en cada ticket.',
     ],
   },
 }

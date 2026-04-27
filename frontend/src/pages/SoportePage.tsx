@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { apiGet, apiPost, apiPut } from '../api/client'
 import EmptyState from '../components/EmptyState'
 import Modal from '../components/Modal'
-import useAuthStore from '../store/authStore'
 
 export default function SoportePage({ role }: { role: string | null }) {
   const isAdmin = role === 'admin' || role === 'administrator' || role === 'supervisor'
