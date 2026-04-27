@@ -24,7 +24,7 @@ export class SupportController {
 
       const [ticket] = await db('support_tickets')
         .insert({
-          user_id: req.user!.id,
+          user_id: (req as any).user.id,
           consulta: consulta.trim(),
           estado: 'Pendiente',
         })
