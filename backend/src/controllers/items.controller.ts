@@ -58,7 +58,7 @@ export class ItemsController {
 
       // Webhook: notify Acción Social to create assistance type
       try {
-        const ACCION_SOCIAL_API = process.env.ACCION_SOCIAL_API_URL || 'http://sanroque_backend:3001'
+        const ACCION_SOCIAL_API = process.env.ACCION_SOCIAL_API_URL || 'https://accionsocial.munisanroque.ar'
         const INTERNAL_KEY = process.env.STOCK_INTERNAL_KEY || 'san-roque-stock-sync-2026'
         
         fetch(`${ACCION_SOCIAL_API}/api/config/sync-stock-item`, {
@@ -88,6 +88,19 @@ export class ItemsController {
         .returning('*')
 
       if (!item) return res.status(404).json({ error: 'Ítem no encontrado.' })
+
+      // Webhook: notify Acción Social on update too
+      try {
+        const ACCION_SOCIAL_API = process.env.ACCION_SOCIAL_API_URL || 'https://accionsocial.munisanroque.ar'
+        const INTERNAL_KEY = process.env.STOCK_INTERNAL_KEY || 'san-roque-stock-sync-2026'
+        
+        fetch(`${ACCION_SOCIAL_API}/api/config/sync-stock-item`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Internal-Key': INTERNAL_KEY },
+          body: JSON.stringify({ item_id: item.id, code: item.code, name: item.name })
+        }).catch(e => console.warn('Acción Social sync error on update:', e.message))
+      } catch (_) { /* non-blocking */ }
+
       return res.json({ data: item })
     } catch (err) {
       return next(err)
