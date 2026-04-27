@@ -12,6 +12,7 @@ import { upload } from '../middleware/upload.middleware'
 import { alertsController } from '../controllers/alerts.controller'
 import { statisticsController } from '../controllers/statistics.controller'
 import { usersController } from '../controllers/users.controller'
+import { supportController } from '../controllers/support.controller'
 
 export const apiRouter = Router()
 
@@ -76,3 +77,8 @@ apiRouter.get('/export/beneficiaries.xlsx', requireRole('admin', 'supervisor'), 
 apiRouter.post('/import/beneficiaries', requireRole('admin', 'supervisor'), upload.single('file'), excelController.importBeneficiaries.bind(excelController))
 apiRouter.get('/export/movements.xlsx', requireRole('admin', 'supervisor'), excelController.exportMovements.bind(excelController))
 apiRouter.get('/export/inventory-health.xlsx', requireRole('admin', 'supervisor', 'operador'), excelController.exportInventoryHealth.bind(excelController))
+
+// Soporte Técnico
+apiRouter.get('/support', supportController.list.bind(supportController))
+apiRouter.post('/support', supportController.create.bind(supportController))
+apiRouter.put('/support/:id', requireRole('admin', 'supervisor'), supportController.update.bind(supportController))

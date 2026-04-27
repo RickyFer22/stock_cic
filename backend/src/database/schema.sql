@@ -43,6 +43,18 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- Soporte Tecnico
+CREATE TABLE IF NOT EXISTS support_tickets (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  consulta text NOT NULL,
+  estado text NOT NULL DEFAULT 'Pendiente',
+  ultimo_mensaje text,
+  respuestas jsonb DEFAULT '[]'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
 -- Categorías de ítems
 CREATE TABLE IF NOT EXISTS categories (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),

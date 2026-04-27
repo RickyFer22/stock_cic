@@ -7,9 +7,10 @@ import LoginPage from './pages/LoginPage'
 import ItemsPage from './pages/ItemsPage'
 import MovementsPage from './pages/MovementsPage'
 import SupervisorPage from './pages/SupervisorPage'
+import SoportePage from './pages/SoportePage'
 
 type Role = 'admin' | 'supervisor' | 'operador'
-type Tab = 'distributions' | 'items' | 'movements' | 'supervisor'
+type Tab = 'distributions' | 'items' | 'movements' | 'supervisor' | 'soporte'
 type MeResponse = { user?: { full_name: string; role: Role } }
 
 type ShellProps = {
@@ -109,7 +110,7 @@ export default function App() {
   const canOpenSupervisor = role === 'admin' || role === 'supervisor'
 
   const availableTabs = useMemo<Tab[]>(
-    () => (canOpenSupervisor ? ['distributions', 'items', 'movements', 'supervisor'] : ['distributions', 'items', 'movements']),
+    () => (canOpenSupervisor ? ['distributions', 'items', 'movements', 'supervisor', 'soporte'] : ['distributions', 'items', 'movements', 'soporte']),
     [canOpenSupervisor],
   )
 
@@ -172,6 +173,7 @@ export default function App() {
           <NavButton label="Egresos" active={tab === 'distributions'} onClick={() => setTab('distributions')} />
           <NavButton label="Articulos" active={tab === 'items'} onClick={() => setTab('items')} />
           <NavButton label="Movimientos" active={tab === 'movements'} onClick={() => setTab('movements')} />
+          <NavButton label="Soporte" active={tab === 'soporte'} onClick={() => setTab('soporte')} />
           {canOpenSupervisor && (
             <NavButton label="Supervisor" active={tab === 'supervisor'} tone="amber" onClick={() => setTab('supervisor')} />
           )}
@@ -182,6 +184,7 @@ export default function App() {
         <NavButton label="Egresos" active={tab === 'distributions'} onClick={() => setTab('distributions')} />
         <NavButton label="Articulos" active={tab === 'items'} onClick={() => setTab('items')} />
         <NavButton label="Movimientos" active={tab === 'movements'} onClick={() => setTab('movements')} />
+        <NavButton label="Soporte" active={tab === 'soporte'} onClick={() => setTab('soporte')} />
         {canOpenSupervisor && (
           <NavButton label="Supervisor" active={tab === 'supervisor'} tone="amber" onClick={() => setTab('supervisor')} />
         )}
@@ -190,6 +193,7 @@ export default function App() {
       {tab === 'distributions' && <DistributionsPage />}
       {tab === 'items' && <ItemsPage role={role} />}
       {tab === 'movements' && <MovementsPage />}
+      {tab === 'soporte' && <SoportePage role={role} />}
       {tab === 'supervisor' && canOpenSupervisor && <SupervisorPage role={role as 'admin' | 'supervisor'} />}
 
       <nav className="fixed md:hidden bottom-0 inset-x-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
