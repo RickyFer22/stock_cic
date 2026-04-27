@@ -43,6 +43,15 @@ export default function ItemsPage() {
     stock_minimo: 0
   })
 
+  // Auto-generate next sequential code
+  const nextCode = useMemo(() => {
+    const maxNum = items.reduce((max, it) => {
+      const num = parseInt(it.code, 10)
+      return !isNaN(num) && num > max ? num : max
+    }, 0)
+    return String(maxNum + 1).padStart(5, '0')
+  }, [items])
+
   const [showIngreso, setShowIngreso] = useState(false)
   const [ingresoData, setIngresoData] = useState({
     item_id: '',
@@ -108,10 +117,17 @@ export default function ItemsPage() {
     setFormError(null)
     setFormLoading(true)
     try {
-      await apiPost('/api/items', {
-        ...formData,
-        stock_minimo: Number(formData.stock_minimo)
-      })
+      const payload: Record<string, any> = {
+        code: nextCode,
+        name: formData.name,
+        unit: formData.unit || 'unidad',
+      }
+      if (formData.location?.trim()) payload.location = formData.location.trim()
+      if (formData.expiry_date) payload.expiry_date = formData.expiry_date
+      const minimo = Number(formData.stock_minimo)
+      if (!isNaN(minimo) && minimo > 0) payload.stock_minimo = minimo
+      
+      await apiPost('/api/items', payload)
       setShowForm(false)
       loadItems()
     } catch (err: any) {
@@ -373,12 +389,11 @@ export default function ItemsPage() {
              <label className="block">
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Código Único</span>
                 <input
-                  required
-                  value={formData.code}
-                  onChange={e => setFormData({ ...formData, code: e.target.value })}
-                  className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-brand-green-500 focus:border-brand-green-500 outline-none"
-                  placeholder="Ej: ART-001"
+                  readOnly
+                  value={nextCode}
+                  className="mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-slate-600 font-mono font-bold cursor-not-allowed outline-none"
                 />
+                <p className="text-[10px] text-slate-400 mt-1">Se genera automáticamente</p>
              </label>
              <label className="block">
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Nombre del Artículo</span>
