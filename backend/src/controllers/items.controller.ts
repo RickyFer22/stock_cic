@@ -34,6 +34,12 @@ export class ItemsController {
 
     const payload = parsed.data
     try {
+      // Check for duplicates
+      const existing = await db('items').whereRaw('LOWER(name) = ?', [payload.name.trim().toLowerCase()]).first()
+      if (existing) {
+        return res.status(400).json({ error: 'Ya existe un artículo con este nombre exacto.' })
+      }
+
       const [item] = await db('items')
         .insert({
           id: uuidv4(),
@@ -98,6 +104,33 @@ export class ItemsController {
 
       if (!item) return res.status(404).json({ error: 'Ítem no encontrado.' })
       return res.json({ data: item })
+    } catch (err) {
+      return next(err)
+    }
+  }
+
+  async delete(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params
+
+      // Check if it has movements
+      const moveCount = await db('stock_movements').where('item_id', id).count('id as count').first()
+      if (moveCount && Number(moveCount.count) > 0) {
+        return res.status(400).json({ error: 'No se puede eliminar el artículo porque ya tiene movimientos de stock.' })
+      }
+
+      // Check if it's used in distributions
+      const distCount = await db('distribution_items').where('item_id', id).count('id as count').first()
+      if (distCount && Number(distCount.count) > 0) {
+        return res.status(400).json({ error: 'No se puede eliminar el artículo porque es parte de distribuciones.' })
+      }
+
+      const deleted = await db('items').where('id', id).delete()
+      if (!deleted) {
+        return res.status(404).json({ error: 'Ítem no encontrado.' })
+      }
+
+      return res.json({ message: 'Artículo eliminado correctamente.' })
     } catch (err) {
       return next(err)
     }

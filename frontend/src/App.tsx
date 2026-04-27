@@ -188,7 +188,7 @@ export default function App() {
       </div>
 
       {tab === 'distributions' && <DistributionsPage />}
-      {tab === 'items' && <ItemsPage />}
+      {tab === 'items' && <ItemsPage role={role} />}
       {tab === 'movements' && <MovementsPage />}
       {tab === 'supervisor' && canOpenSupervisor && <SupervisorPage role={role as 'admin' | 'supervisor'} />}
 

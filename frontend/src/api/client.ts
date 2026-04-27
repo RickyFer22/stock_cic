@@ -49,6 +49,19 @@ export async function apiPut<T>(path: string, body: any): Promise<T> {
   return json as T
 }
 
+export async function apiDelete<T>(path: string): Promise<T> {
+  const res = await fetch(path, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getToken() || ''}`,
+    },
+  })
+  const json = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error((json as ApiError).error || `HTTP ${res.status}`)
+  return json as T
+}
+
 export async function apiDownload(path: string, filename: string): Promise<void> {
   const res = await fetch(path, {
     headers: {

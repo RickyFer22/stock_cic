@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import EmptyState from '../components/EmptyState'
 import HowToCard from '../components/HowToCard'
 import Modal from '../components/Modal'
-import { apiDownload, apiGet, apiUploadExcel, apiPost } from '../api/client'
+import { apiDownload, apiGet, apiUploadExcel, apiPost, apiDelete } from '../api/client'
 
 type ItemRow = {
   id: string
@@ -25,7 +25,9 @@ type InventoryHealthSummary = {
   expiringSoon: number
 }
 
-export default function ItemsPage() {
+export default function ItemsPage({ role }: { role: string | null }) {
+  const isAdminOrSupervisor = role === 'admin' || role === 'supervisor' || role === 'administrator'
+
   const [items, setItems] = useState<ItemRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -134,6 +136,17 @@ export default function ItemsPage() {
       setFormError(err.message || 'Error creando ítem')
     } finally {
       setFormLoading(false)
+    }
+  }
+
+  async function handleDeleteItem(id: string) {
+    if (!confirm('¿Seguro que desea eliminar este ítem? Si ya tiene movimientos de stock, no se podrá eliminar.')) return
+    try {
+      await apiDelete(`/api/items/${id}`)
+      loadItems()
+      alert('Ítem eliminado correctamente.')
+    } catch (err: any) {
+      alert(err.message || 'Error al eliminar el ítem.')
     }
   }
 
@@ -362,6 +375,7 @@ export default function ItemsPage() {
                 <th className="px-5 py-4 font-bold">Vence</th>
                 <th className="px-5 py-4 font-bold text-right">Stock</th>
                 <th className="px-5 py-4 font-bold text-right">Mínimo</th>
+                {isAdminOrSupervisor && <th className="px-5 py-4 font-bold text-right">Opciones</th>}
               </tr>
             </thead>
             <tbody>
@@ -375,6 +389,19 @@ export default function ItemsPage() {
                   <td className="px-5 py-4 text-slate-600">{it.expiry_date ? new Date(it.expiry_date).toLocaleDateString() : '-'}</td>
                   <td className="px-5 py-4 text-right font-black text-brand-green-900 text-base">{it.stock_actual}</td>
                   <td className="px-5 py-4 text-right text-slate-500 font-semibold">{it.stock_minimo}</td>
+                  {isAdminOrSupervisor && (
+                    <td className="px-5 py-4 text-right">
+                      {it.stock_actual === 0 && (
+                        <button
+                          onClick={() => handleDeleteItem(it.id)}
+                          className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                          title="Eliminar ítem"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

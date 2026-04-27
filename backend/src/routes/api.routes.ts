@@ -30,6 +30,7 @@ apiRouter.get('/items', stockController.getItems.bind(stockController))
 apiRouter.post('/items', requireRole('admin', 'supervisor'), itemsController.create.bind(itemsController))
 apiRouter.put('/items/:id', requireRole('admin', 'supervisor'), itemsController.update.bind(itemsController))
 apiRouter.get('/items/:id', itemsController.getOne.bind(itemsController))
+apiRouter.delete('/items/:id', requireRole('admin', 'supervisor'), itemsController.delete.bind(itemsController))
 
 // Movimientos
 apiRouter.post('/stock/ingreso', requireRole('admin', 'supervisor'), stockController.createIngreso.bind(stockController))
