@@ -50,6 +50,21 @@ export class ItemsController {
         })
         .returning('*')
 
+      // Webhook: notify Acción Social to create assistance type
+      try {
+        const ACCION_SOCIAL_API = process.env.ACCION_SOCIAL_API_URL || 'http://sanroque_backend:3001'
+        const INTERNAL_KEY = process.env.STOCK_INTERNAL_KEY || 'san-roque-stock-sync-2026'
+        
+        fetch(`${ACCION_SOCIAL_API}/api/config/sync-stock-item`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Internal-Key': INTERNAL_KEY },
+          body: JSON.stringify({ item_id: item.id, code: item.code, name: item.name })
+        }).then(r => {
+          if (r.ok) console.log(`Synced item "${item.name}" to Acción Social`)
+          else console.warn(`Failed to sync item to Acción Social: ${r.status}`)
+        }).catch(e => console.warn('Acción Social sync error (non-blocking):', e.message))
+      } catch (_) { /* non-blocking */ }
+
       return res.status(201).json({ data: item })
     } catch (err) {
       return next(err)
