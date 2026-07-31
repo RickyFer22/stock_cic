@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { apiGet, apiPost, apiPut } from '../api/client'
 import EmptyState from '../components/EmptyState'
 import Modal from '../components/Modal'
+import Banner, { type Feedback } from '../components/Banner'
 
 export default function SoportePage({ role }: { role: string | null }) {
   const isAdmin = role === 'admin' || role === 'administrator' || role === 'supervisor'
@@ -15,6 +16,7 @@ export default function SoportePage({ role }: { role: string | null }) {
   const [messages, setMessages] = useState<any[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [sendingMessage, setSendingMessage] = useState(false)
+  const [feedback, setFeedback] = useState<Feedback>(null)
 
   useEffect(() => { loadTickets() }, [])
 
@@ -24,23 +26,23 @@ export default function SoportePage({ role }: { role: string | null }) {
       const res = await apiGet<{ data: any[] }>('/api/support')
       setTickets(res.data || [])
     } catch (err: any) {
-      alert(err.message || 'Error al cargar tickets')
+      setFeedback({ tone: 'error', text: err.message || 'No se pudieron cargar los tickets.' })
     } finally {
       setLoading(false)
     }
   }
 
   const handleCreate = async () => {
-    if (!newConsulta.trim()) return alert('Escriba su consulta')
+    if (!newConsulta.trim()) return setFeedback({ tone: 'error', text: 'Escribí tu consulta antes de enviarla.' })
     try {
       setCreating(true)
       await apiPost('/api/support', { consulta: newConsulta })
-      alert('Ticket creado exitosamente')
+      setFeedback({ tone: 'success', text: 'Ticket creado. El área de Sistemas va a responderte por acá.' })
       setNewConsulta('')
       setShowNewForm(false)
       loadTickets()
     } catch (err: any) {
-      alert(err.message || 'Error al crear ticket')
+      setFeedback({ tone: 'error', text: err.message || 'No se pudo crear el ticket.' })
     } finally {
       setCreating(false)
     }
@@ -62,7 +64,7 @@ export default function SoportePage({ role }: { role: string | null }) {
       setViewTicket({ ...viewTicket, respuestas: nuevasRespuestas })
       loadTickets()
     } catch (err: any) {
-      alert(err.message || 'Error al enviar mensaje')
+      setFeedback({ tone: 'error', text: err.message || 'No se pudo enviar el mensaje.' })
     } finally {
       setSendingMessage(false)
     }
@@ -71,11 +73,11 @@ export default function SoportePage({ role }: { role: string | null }) {
   const handleEstado = async (ticketId: string, estado: string) => {
     try {
       await apiPut(`/api/support/${ticketId}`, { estado })
-      alert('Estado actualizado')
+      setFeedback({ tone: 'success', text: 'Estado del ticket actualizado.' })
       loadTickets()
       if (viewTicket?.id === ticketId) setViewTicket({ ...viewTicket, estado })
     } catch (err: any) {
-      alert(err.message || 'Error al cambiar estado')
+      setFeedback({ tone: 'error', text: err.message || 'No se pudo cambiar el estado.' })
     }
   }
 
@@ -96,6 +98,7 @@ export default function SoportePage({ role }: { role: string | null }) {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
+      <Banner feedback={feedback} onDismiss={() => setFeedback(null)} />
       {/* Header */}
       <div className="bg-gradient-to-r from-brand-green-700 via-teal-600 to-brand-green-600 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 opacity-10 pointer-events-none">

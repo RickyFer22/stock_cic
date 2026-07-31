@@ -42,6 +42,7 @@ function NavButton({ label, active, tone = 'green', onClick }: NavButtonProps) {
   return (
     <button
       onClick={onClick}
+      aria-current={active ? 'page' : undefined}
       className={`px-4 py-2.5 rounded-xl font-bold tracking-wide uppercase text-xs sm:text-sm border-2 transition-all ${active ? activeClass : idleClass}`}
     >
       {label}
@@ -114,13 +115,20 @@ export default function App() {
     [canOpenSupervisor],
   )
 
+  // Sincroniza el hash con la pestaña activa, en los dos sentidos. Sin el listener
+  // de hashchange el boton Atras cambiaba la URL pero la vista se quedaba igual.
   useEffect(() => {
-    const hash = window.location.hash.replace('#', '') as Tab
-    if (availableTabs.includes(hash)) {
-      setTab(hash)
-    } else if (hash === 'supervisor' && !canOpenSupervisor) {
-      setTab('distributions')
+    const aplicarHash = () => {
+      const hash = window.location.hash.replace('#', '') as Tab
+      if (availableTabs.includes(hash)) {
+        setTab(hash)
+      } else if (hash === 'supervisor' && !canOpenSupervisor) {
+        setTab('distributions')
+      }
     }
+    aplicarHash()
+    window.addEventListener('hashchange', aplicarHash)
+    return () => window.removeEventListener('hashchange', aplicarHash)
   }, [availableTabs, canOpenSupervisor])
 
   useEffect(() => {
@@ -168,19 +176,9 @@ export default function App() {
     >
       <HelpPanel open={helpOpen} onClose={() => setHelpOpen(false)} currentTab={tab} showSupervisorHelp={canOpenSupervisor} />
 
-      <div className="md:hidden mb-4">
-        <div className="grid grid-cols-2 gap-2">
-          <NavButton label="Egresos" active={tab === 'distributions'} onClick={() => setTab('distributions')} />
-          <NavButton label="Articulos" active={tab === 'items'} onClick={() => setTab('items')} />
-          <NavButton label="Movimientos" active={tab === 'movements'} onClick={() => setTab('movements')} />
-          <NavButton label="Soporte" active={tab === 'soporte'} onClick={() => setTab('soporte')} />
-          {canOpenSupervisor && (
-            <NavButton label="Supervisor" active={tab === 'supervisor'} tone="amber" onClick={() => setTab('supervisor')} />
-          )}
-        </div>
-      </div>
-
-      <div className="hidden md:flex mb-6 flex-wrap gap-3">
+      {/* En movil la navegacion vive solo en la barra inferior fija: la grilla que
+          habia aca arriba mostraba las mismas pestanas dos veces en pantalla. */}
+      <nav aria-label="Navegación principal" className="hidden md:flex mb-6 flex-wrap gap-3">
         <NavButton label="Egresos" active={tab === 'distributions'} onClick={() => setTab('distributions')} />
         <NavButton label="Articulos" active={tab === 'items'} onClick={() => setTab('items')} />
         <NavButton label="Movimientos" active={tab === 'movements'} onClick={() => setTab('movements')} />
@@ -188,7 +186,7 @@ export default function App() {
         {canOpenSupervisor && (
           <NavButton label="Supervisor" active={tab === 'supervisor'} tone="amber" onClick={() => setTab('supervisor')} />
         )}
-      </div>
+      </nav>
 
       {tab === 'distributions' && <DistributionsPage />}
       {tab === 'items' && <ItemsPage role={role} />}
@@ -196,34 +194,35 @@ export default function App() {
       {tab === 'soporte' && <SoportePage role={role} />}
       {tab === 'supervisor' && canOpenSupervisor && <SupervisorPage role={role as 'admin' | 'supervisor'} />}
 
-      <nav className="fixed md:hidden bottom-0 inset-x-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-        <div className={`grid gap-2 ${canOpenSupervisor ? 'grid-cols-4' : 'grid-cols-3'}`}>
-          <button
-            onClick={() => setTab('distributions')}
-            className={`rounded-xl px-2 py-2 text-[11px] font-bold uppercase tracking-wide ${tab === 'distributions' ? 'bg-brand-green-900 text-white' : 'bg-slate-100 text-slate-600'}`}
-          >
-            Egresos
-          </button>
-          <button
-            onClick={() => setTab('items')}
-            className={`rounded-xl px-2 py-2 text-[11px] font-bold uppercase tracking-wide ${tab === 'items' ? 'bg-brand-green-900 text-white' : 'bg-slate-100 text-slate-600'}`}
-          >
-            Articulos
-          </button>
-          <button
-            onClick={() => setTab('movements')}
-            className={`rounded-xl px-2 py-2 text-[11px] font-bold uppercase tracking-wide ${tab === 'movements' ? 'bg-brand-green-900 text-white' : 'bg-slate-100 text-slate-600'}`}
-          >
-            Movimientos
-          </button>
-          {canOpenSupervisor && (
-            <button
-              onClick={() => setTab('supervisor')}
-              className={`rounded-xl px-2 py-2 text-[11px] font-bold uppercase tracking-wide ${tab === 'supervisor' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-700'}`}
-            >
-              Supervisor
-            </button>
-          )}
+      <nav
+        aria-label="Navegación principal"
+        className="fixed md:hidden bottom-0 inset-x-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]"
+      >
+        <div className={`grid gap-1.5 ${canOpenSupervisor ? 'grid-cols-5' : 'grid-cols-4'}`}>
+          {([
+            ['distributions', 'Egresos'],
+            ['items', 'Articulos'],
+            ['movements', 'Movim.'],
+            ['soporte', 'Soporte'],
+            ...(canOpenSupervisor ? [['supervisor', 'Superv.'] as [Tab, string]] : []),
+          ] as [Tab, string][]).map(([key, label]) => {
+            const active = tab === key
+            const amber = key === 'supervisor'
+            return (
+              <button
+                key={key}
+                onClick={() => setTab(key)}
+                aria-current={active ? 'page' : undefined}
+                className={`rounded-xl px-1 py-2 text-[10.5px] font-bold uppercase tracking-wide truncate ${
+                  active
+                    ? amber ? 'bg-amber-600 text-white' : 'bg-brand-green-900 text-white'
+                    : amber ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600'
+                }`}
+              >
+                {label}
+              </button>
+            )
+          })}
         </div>
       </nav>
     </Shell>

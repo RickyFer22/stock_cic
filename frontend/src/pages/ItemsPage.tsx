@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import EmptyState from '../components/EmptyState'
 import HowToCard from '../components/HowToCard'
 import Modal from '../components/Modal'
+import Banner, { type Feedback } from '../components/Banner'
+import ConfirmDialog from '../components/ConfirmDialog'
 import { apiDownload, apiGet, apiUploadExcel, apiPost, apiDelete } from '../api/client'
+import { formatNumero } from '../lib/format'
 
 type ItemRow = {
   id: string
@@ -83,6 +86,12 @@ export default function ItemsPage({ role }: { role: string | null }) {
   // organismo se escriba distinto en cada carga.
   const [proveedores, setProveedores] = useState<string[]>([])
 
+  // Avisos en linea y confirmacion propia, en reemplazo de alert()/confirm().
+  const [feedback, setFeedback] = useState<Feedback>(null)
+  const [itemAEliminar, setItemAEliminar] = useState<ItemRow | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [exporting, setExporting] = useState<'items' | 'health' | null>(null)
+
   // Artículo elegido en el ingreso, para mostrar el stock resultante antes de guardar.
   const ingresoItem = useMemo(
     () => items.find(it => it.id === ingresoData.item_id) || null,
@@ -162,14 +171,19 @@ export default function ItemsPage({ role }: { role: string | null }) {
     }
   }
 
-  async function handleDeleteItem(id: string) {
-    if (!confirm('¿Seguro que desea eliminar este ítem? Si ya tiene movimientos de stock, no se podrá eliminar.')) return
+  async function handleDeleteItem() {
+    if (!itemAEliminar) return
+    setDeleting(true)
     try {
-      await apiDelete(`/api/items/${id}`)
+      await apiDelete(`/api/items/${itemAEliminar.id}`)
       loadItems()
-      alert('Ítem eliminado correctamente.')
+      setFeedback({ tone: 'success', text: `Artículo ${itemAEliminar.code} — ${itemAEliminar.name} eliminado correctamente.` })
+      setItemAEliminar(null)
     } catch (err: any) {
-      alert(err.message || 'Error al eliminar el ítem.')
+      setFeedback({ tone: 'error', text: err.message || 'Error al eliminar el artículo.' })
+      setItemAEliminar(null)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -218,26 +232,29 @@ export default function ItemsPage({ role }: { role: string | null }) {
     }
   }
 
+  // El estado de descarga vive en React: antes se deshabilitaba el boton con
+  // document.getElementById, que se pierde en cada re-render.
   async function handleExport() {
+    setExporting('items')
     try {
-      const btn = document.getElementById('btn-export') as HTMLButtonElement
-      if (btn) btn.disabled = true
       await apiDownload('/api/export/items.xlsx', 'items_san_roque.xlsx')
-      alert('La exportación de Excel ha comenzado. Revise sus descargas.')
+      setFeedback({ tone: 'success', text: 'Listado de artículos descargado.' })
     } catch (err: any) {
-      alert('Error exportando: ' + err.message)
+      setFeedback({ tone: 'error', text: `No se pudo exportar el listado: ${err.message}` })
     } finally {
-      const btn = document.getElementById('btn-export') as HTMLButtonElement
-      if (btn) btn.disabled = false
+      setExporting(null)
     }
   }
 
   async function handleExportHealth() {
+    setExporting('health')
     try {
       await apiDownload('/api/export/inventory-health.xlsx', 'estado_stock_san_roque.xlsx')
-      alert('Reporte de estado de stock generado. Revise sus descargas.')
+      setFeedback({ tone: 'success', text: 'Reporte de estado de stock descargado.' })
     } catch (err: any) {
-      alert('Error exportando reporte de stock: ' + err.message)
+      setFeedback({ tone: 'error', text: `No se pudo exportar el reporte: ${err.message}` })
+    } finally {
+      setExporting(null)
     }
   }
 
@@ -274,16 +291,17 @@ export default function ItemsPage({ role }: { role: string | null }) {
         <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1 hidden sm:inline">Reportes y datos</span>
         <button
           onClick={handleExportHealth}
-          className="px-5 py-2.5 rounded-xl bg-white border-2 border-slate-200 shadow-sm font-bold tracking-wide text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all uppercase text-sm"
-        >
-          Reporte stock
-        </button>
-        <button
-          id="btn-export"
-          onClick={handleExport}
+          disabled={exporting !== null}
           className="px-5 py-2.5 rounded-xl bg-white border-2 border-slate-200 shadow-sm font-bold tracking-wide text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all uppercase text-sm disabled:opacity-50"
         >
-          Exportar Excel
+          {exporting === 'health' ? 'Generando…' : 'Reporte stock'}
+        </button>
+        <button
+          onClick={handleExport}
+          disabled={exporting !== null}
+          className="px-5 py-2.5 rounded-xl bg-white border-2 border-slate-200 shadow-sm font-bold tracking-wide text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all uppercase text-sm disabled:opacity-50"
+        >
+          {exporting === 'items' ? 'Generando…' : 'Exportar Excel'}
         </button>
         <label className="px-5 py-2.5 rounded-xl bg-brand-green-900 text-white font-bold tracking-wide uppercase text-sm hover:bg-brand-green-700 transition-all shadow-md hover:shadow-lg cursor-pointer">
           {importing ? 'Importando…' : 'Importar Excel'}
@@ -320,6 +338,17 @@ export default function ItemsPage({ role }: { role: string | null }) {
   return (
     <div className="space-y-5">
       {header}
+      <Banner feedback={feedback} onDismiss={() => setFeedback(null)} />
+      {itemAEliminar && (
+        <ConfirmDialog
+          title="Eliminar artículo"
+          message={`¿Seguro que querés eliminar "${itemAEliminar.code} — ${itemAEliminar.name}"? Si ya tiene movimientos de stock, el sistema no va a permitirlo.`}
+          confirmLabel="Eliminar"
+          loading={deleting}
+          onConfirm={handleDeleteItem}
+          onCancel={() => setItemAEliminar(null)}
+        />
+      )}
       <HowToCard
         title="Guia rapida de articulos"
         steps={[
@@ -411,15 +440,16 @@ export default function ItemsPage({ role }: { role: string | null }) {
                   <td className="px-5 py-4 text-slate-600 font-medium">{it.unit}</td>
                   <td className="px-5 py-4 text-slate-600">{it.location || '-'}</td>
                   <td className="px-5 py-4 text-slate-600">{it.expiry_date ? new Date(it.expiry_date).toLocaleDateString() : '-'}</td>
-                  <td className="px-5 py-4 text-right font-black text-brand-green-900 text-base">{it.stock_actual}</td>
-                  <td className="px-5 py-4 text-right text-slate-500 font-semibold">{it.stock_minimo}</td>
+                  <td className="px-5 py-4 text-right font-black text-brand-green-900 text-base tabular-nums">{formatNumero(it.stock_actual)}</td>
+                  <td className="px-5 py-4 text-right text-slate-500 font-semibold tabular-nums">{formatNumero(it.stock_minimo)}</td>
                   {isAdminOrSupervisor && (
                     <td className="px-5 py-4 text-right">
                       {it.stock_actual === 0 && (
                         <button
-                          onClick={() => handleDeleteItem(it.id)}
+                          onClick={() => setItemAEliminar(it)}
                           className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-                          title="Eliminar ítem"
+                          title={`Eliminar ${it.code} — ${it.name}`}
+                          aria-label={`Eliminar artículo ${it.code} ${it.name}`}
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                         </button>

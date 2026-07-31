@@ -2,7 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import EmptyState from '../components/EmptyState'
 import HowToCard from '../components/HowToCard'
 import Modal from '../components/Modal'
+import Banner, { type Feedback } from '../components/Banner'
 import { apiDownload, apiGet, apiPost } from '../api/client'
+import { esMovimientoAutomatico, formatFecha, formatNumero, MOVEMENT_TYPE_LABEL } from '../lib/format'
+
+type Pagination = { page: number; limit: number; total: number; totalPages: number }
+
+const PAGE_SIZE = 50
 
 type OutboundMovementRow = {
   id: string
@@ -33,6 +39,9 @@ export default function DistributionsPage() {
   const [exporting, setExporting] = useState(false)
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<'all' | 'delivery' | 'transfer_out' | 'waste' | 'adjustment'>('all')
+  const [page, setPage] = useState(1)
+  const [pagination, setPagination] = useState<Pagination | null>(null)
+  const [feedback, setFeedback] = useState<Feedback>(null)
 
   // Creation form state
   const [showForm, setShowForm] = useState(false)
@@ -47,11 +56,17 @@ export default function DistributionsPage() {
   const [selectedItems, setSelectedItems] = useState<Array<{item_id:string, quantity:number, name:string}>>([])
   const [pendingItemId, setPendingItemId] = useState('')
 
-  async function loadDistributions() {
+  // Se pagina contra la API. Antes se pedia limit=100 sin paginar: pasados los 100
+  // egresos los mas viejos desaparecian de la pantalla sin ningun aviso, y ahora
+  // que Accion Social genera egresos automaticos ese techo se alcanza rapido.
+  async function loadDistributions(pagina = page) {
     setLoading(true)
     try {
-      const data = await apiGet<{ data: any[] }>('/api/movements?kind=OUTBOUND&limit=100')
+      const data = await apiGet<{ data: any[]; pagination: Pagination }>(
+        `/api/movements?kind=OUTBOUND&page=${pagina}&limit=${PAGE_SIZE}`,
+      )
       setRows(data.data)
+      setPagination(data.pagination)
     } catch (e: any) {
       setError(e.message || 'Error')
     } finally {
@@ -60,8 +75,9 @@ export default function DistributionsPage() {
   }
 
   useEffect(() => {
-    loadDistributions()
-  }, [])
+    loadDistributions(page)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page])
 
   // Load items when form opens
   useEffect(() => {
@@ -76,8 +92,9 @@ export default function DistributionsPage() {
     try {
       setExporting(true)
       await apiDownload('/api/export/movements.xlsx?kind=OUTBOUND', 'egresos_san_roque.xlsx')
+      setFeedback({ tone: 'success', text: 'Listado de egresos descargado.' })
     } catch (e: any) {
-      alert('Error exportando Excel: ' + (e.message || 'Error desconocido'))
+      setFeedback({ tone: 'error', text: `No se pudo exportar: ${e.message || 'error desconocido'}` })
     } finally {
       setExporting(false)
     }
@@ -91,13 +108,16 @@ export default function DistributionsPage() {
     setFormError(null)
     setFormLoading(true)
     try {
+      // El endpoint espera "destination", no "counterparty": enviarlo mal hacia que
+      // el formulario devolviera 400 siempre y ningun egreso manual pudiera cargarse.
       await apiPost('/api/stock/outbound', {
-        counterparty: destination,
+        destination,
         movement_type: movementType,
         notes: observaciones || undefined,
         items: selectedItems.map(it => ({ item_id: it.item_id, quantity: it.quantity }))
       })
       setShowForm(false)
+      setFeedback({ tone: 'success', text: `Egreso registrado: ${selectedItems.length} artículo(s) a ${destination}.` })
       loadDistributions()
       // reset form
       setDestination('')
@@ -158,7 +178,7 @@ export default function DistributionsPage() {
             <div className="w-px h-8 bg-slate-200 hidden sm:block" aria-hidden />
             {/* Resumen y exportación */}
             <div className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-sm font-bold uppercase tracking-wider">
-              Total: <span className="text-brand-green-900 text-base">{filteredRows.length}</span>
+              Total: <span className="text-brand-green-900 text-base">{formatNumero(pagination?.total ?? 0)}</span>
             </div>
             <button
               onClick={handleExportExcel}
@@ -171,20 +191,24 @@ export default function DistributionsPage() {
         </div>
       </div>
     )
-  }, [filteredRows.length, exporting])
+  }, [pagination, rows.length, exporting])
 
-  if (loading) return <EmptyState icon="⏳" message="Cargando" sub="Buscando registros..." />
+  // Solo la carga inicial reemplaza la pantalla. Al pasar de pagina se conservan
+  // filtros y busqueda: desmontarlos en cada consulta hacia perder el contexto.
+  if (loading && !pagination) return <EmptyState icon="⏳" message="Cargando" sub="Buscando registros..." />
   if (error) return <EmptyState icon="⚠️" message="Error" sub={error} />
 
   return (
     <div className="space-y-5">
       {header}
+      <Banner feedback={feedback} onDismiss={() => setFeedback(null)} />
       <HowToCard
         title="Guia rapida de egresos"
         steps={[
           'Paso 1: toca "+ Registrar egreso".',
           'Paso 2: completa tipo, destino y articulos.',
           'Paso 3: confirma y revisa el detalle tocando una fila.',
+          'Los egresos marcados "Automatico" los genera Accion Social al registrar una asistencia.',
         ]}
       />
 
@@ -226,17 +250,58 @@ export default function DistributionsPage() {
             </thead>
             <tbody>
               {filteredRows.map((r) => (
-                <tr key={r.id} className="border-t border-slate-100 hover:bg-slate-50 transition-colors" onClick={() => setSelectedId(r.id)}>
-                  <td className="px-5 py-4 whitespace-nowrap text-slate-600 font-medium">{new Date(r.fecha).toLocaleString()}</td>
+                <tr
+                  key={r.id}
+                  className="border-t border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer focus-within:bg-slate-50"
+                  onClick={() => setSelectedId(r.id)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedId(r.id) } }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`Ver detalle del egreso del ${formatFecha(r.fecha)} a ${r.counterparty || 'destino sin especificar'}`}
+                >
+                  <td className="px-5 py-4 whitespace-nowrap text-slate-600 font-medium tabular-nums">{formatFecha(r.fecha)}</td>
                   <td className="px-5 py-4 text-slate-700 font-bold">
-                     {r.movement_type === 'delivery' ? 'Entrega' : r.movement_type === 'transfer_out' ? 'Transferencia' : r.movement_type === 'waste' ? 'Descarte' : 'Ajuste'}
+                    {MOVEMENT_TYPE_LABEL[r.movement_type] || r.movement_type}
                   </td>
-                  <td className="px-5 py-4 text-slate-700 font-semibold">{r.counterparty} <span className="text-slate-400 font-normal ml-2">{r.notes}</span></td>
+                  <td className="px-5 py-4 text-slate-700 font-semibold">
+                    {r.counterparty || <span className="text-slate-400 font-normal">Sin destino</span>}
+                    {r.notes && <span className="text-slate-400 font-normal ml-2">{r.notes}</span>}
+                    {esMovimientoAutomatico(r.counterparty) && (
+                      <span className="block mt-1 text-[10px] uppercase font-black tracking-widest text-brand-blue-700">
+                        Automático · Acción Social
+                      </span>
+                    )}
+                  </td>
                   <td className="px-5 py-4 text-slate-500 font-medium">{r.operador}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-slate-100 bg-white/60">
+          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            Mostrando {pagination?.total ? (page - 1) * PAGE_SIZE + 1 : 0}–
+            {Math.min(page * PAGE_SIZE, pagination?.total ?? 0)} de {formatNumero(pagination?.total ?? 0)}
+            {search || typeFilter !== 'all' ? ` · ${filteredRows.length} en pantalla tras filtrar` : ''}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1 || loading}
+              className="px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm font-bold text-slate-600 disabled:opacity-40 hover:bg-slate-50 transition"
+            >
+              Anterior
+            </button>
+            <span className="text-sm font-bold text-slate-600 tabular-nums">{page} / {pagination?.totalPages ?? 1}</span>
+            <button
+              onClick={() => setPage((p) => Math.min(pagination?.totalPages ?? 1, p + 1))}
+              disabled={page >= (pagination?.totalPages ?? 1) || loading}
+              className="px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm font-bold text-slate-600 disabled:opacity-40 hover:bg-slate-50 transition"
+            >
+              Siguiente
+            </button>
+          </div>
         </div>
       </div>
       )}
@@ -263,7 +328,7 @@ export default function DistributionsPage() {
                   </div>
                   <div className="text-right">
                     <div className="text-xs text-slate-500 uppercase tracking-wide">Fecha</div>
-                    <div className="text-slate-900 font-semibold">{new Date(detail.fecha).toLocaleString()}</div>
+                    <div className="text-slate-900 font-semibold">{formatFecha(detail.fecha)}</div>
                     <div className="text-sm text-slate-600">Operador: <b>{detail.operador}</b></div>
                   </div>
                 </div>
@@ -302,7 +367,7 @@ export default function DistributionsPage() {
                         <td className="px-3 py-2 font-semibold text-brand-blue-700">{it.code}</td>
                         <td className="px-3 py-2 text-slate-900">{it.name}</td>
                         <td className="px-3 py-2 text-slate-700">{it.unit}</td>
-                        <td className="px-3 py-2 text-right font-semibold text-slate-900">{it.quantity}</td>
+                        <td className="px-3 py-2 text-right font-semibold text-slate-900 tabular-nums">{formatNumero(it.quantity)}</td>
                       </tr>
                     ))}
                   </tbody>
