@@ -427,9 +427,9 @@ export default function ItemsPage({ role }: { role: string | null }) {
                 <input
                   required
                   value={formData.name}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
+                  onChange={e => setFormData({ ...formData, name: e.target.value.toUpperCase() })}
                   className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-brand-green-500 focus:border-brand-green-500 outline-none"
-                  placeholder="Ej: Fideos Tallarines 500g"
+                  placeholder="Ej: FIDEOS TALLARINES 500G"
                 />
              </label>
              <div className="grid grid-cols-2 gap-4">

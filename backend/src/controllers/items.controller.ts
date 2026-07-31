@@ -3,9 +3,13 @@ import { v4 as uuidv4 } from 'uuid'
 import { z } from 'zod'
 import { db } from '../database/connection'
 
+// Los nombres de artículo se guardan siempre en MAYÚSCULA (LECHE, FRAZADA, COLCHÓN...).
+// Normalizar acá cubre create, update y de paso el payload del webhook hacia Acción Social.
+const itemName = z.string().min(1).transform((v) => v.trim().toUpperCase())
+
 const createSchema = z.object({
   code: z.string().min(1),
-  name: z.string().min(1),
+  name: itemName,
   description: z.string().optional(),
   category_id: z.string().uuid().nullable().optional(),
   unit: z.string().min(1).optional(),
@@ -16,7 +20,7 @@ const createSchema = z.object({
 })
 
 const updateSchema = z.object({
-  name: z.string().min(1).optional(),
+  name: itemName.optional(),
   description: z.string().nullable().optional(),
   category_id: z.string().uuid().nullable().optional(),
   unit: z.string().min(1).optional(),

@@ -167,7 +167,8 @@ export class ExcelController {
         for (let rowNumber = 2; rowNumber <= ws.rowCount; rowNumber++) {
           const row = ws.getRow(rowNumber)
           const code = asText(get(row, 'code'))
-          const name = asText(get(row, 'name'))
+          // Mismo criterio que items.controller.ts: el nombre se persiste en MAYÚSCULA.
+          const name = asText(get(row, 'name')).toUpperCase()
           if (!code || !name) {
             stats.skipped++
             stats.errors.push({ row: rowNumber, error: 'Código o nombre vacío' })
