@@ -79,6 +79,16 @@ export default function ItemsPage({ role }: { role: string | null }) {
   const [healthLoading, setHealthLoading] = useState(false)
   const [search, setSearch] = useState('')
 
+  // Proveedores ya usados, para sugerirlos en el ingreso y evitar que el mismo
+  // organismo se escriba distinto en cada carga.
+  const [proveedores, setProveedores] = useState<string[]>([])
+
+  // Artículo elegido en el ingreso, para mostrar el stock resultante antes de guardar.
+  const ingresoItem = useMemo(
+    () => items.find(it => it.id === ingresoData.item_id) || null,
+    [items, ingresoData.item_id]
+  )
+
   async function loadItems() {
     setLoading(true)
     try {
@@ -91,8 +101,21 @@ export default function ItemsPage({ role }: { role: string | null }) {
     }
   }
 
+  async function loadProveedores() {
+    try {
+      const res = await apiGet<{ data: { counterparty: string | null }[] }>('/api/movements?kind=INGRESO&limit=200')
+      const nombres = Array.from(
+        new Set(res.data.map(m => (m.counterparty || '').trim()).filter(Boolean))
+      ).sort((a, b) => a.localeCompare(b, 'es'))
+      setProveedores(nombres)
+    } catch {
+      // Sugerencias opcionales: si fallan, el campo sigue siendo de texto libre.
+    }
+  }
+
   useEffect(() => {
     loadItems()
+    loadProveedores()
     setHealthLoading(true)
     apiGet<{ data: InventoryHealthSummary }>('/api/statistics/health')
       .then(res => setHealth(res.data))
@@ -164,6 +187,7 @@ export default function ItemsPage({ role }: { role: string | null }) {
       })
       setShowIngreso(false)
       loadItems()
+      loadProveedores()
       setIngresoData({ item_id: '', quantity: 1, movement_type: 'donation', provider: '', notes: '' })
     } catch (err: any) {
       setIngresoError(err.message || 'Error registrando ingreso')
@@ -506,16 +530,53 @@ export default function ItemsPage({ role }: { role: string | null }) {
                 onChange={e => setIngresoData({ ...ingresoData, quantity: parseInt(e.target.value) || 1 })}
                 className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
               />
+              {ingresoItem && ingresoData.quantity > 0 && (
+                <span className="mt-1.5 block text-xs font-semibold text-slate-500">
+                  Stock resultante:{' '}
+                  <b className="text-slate-700">{ingresoItem.stock_actual}</b>
+                  {' → '}
+                  <b className="text-emerald-600">{ingresoItem.stock_actual + ingresoData.quantity}</b>
+                </span>
+              )}
             </label>
             <label className="block">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Observaciones (Origen, Remito, etc.)</span>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Tipo de ingreso</span>
+              <select
+                required
+                value={ingresoData.movement_type}
+                onChange={e => setIngresoData({ ...ingresoData, movement_type: e.target.value as any })}
+                className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+              >
+                <option value="donation">Donación</option>
+                <option value="purchase">Compra</option>
+                <option value="transfer_in">Transferencia recibida</option>
+                <option value="adjustment">Ajuste</option>
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Proveedor / Origen</span>
+              <input
+                required
+                list="proveedores-sugeridos"
+                value={ingresoData.provider}
+                onChange={e => setIngresoData({ ...ingresoData, provider: e.target.value })}
+                className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                placeholder="Ej: Ministerio de Desarrollo Social"
+              />
+              <datalist id="proveedores-sugeridos">
+                {proveedores.map(p => <option key={p} value={p} />)}
+              </datalist>
+            </label>
+            <label className="block">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Remito / Observaciones</span>
               <input
                 value={ingresoData.notes}
                 onChange={e => setIngresoData({ ...ingresoData, notes: e.target.value })}
                 className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                placeholder="Opcional: número de remito, detalle de la entrega"
               />
             </label>
-            
+
             {ingresoError && (
                <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
                  {ingresoError}
