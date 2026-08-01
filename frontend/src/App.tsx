@@ -22,30 +22,53 @@ type ShellProps = {
   showHelpButton: boolean
 }
 
-type NavButtonProps = {
-  label: string
-  active: boolean
-  tone?: 'green' | 'amber'
-  onClick: () => void
-}
+type NavItem = { k: Tab; l: string; ayuda: string; tono?: 'amber' }
 
-function NavButton({ label, active, tone = 'green', onClick }: NavButtonProps) {
+/**
+ * Navegación agrupada. Antes los rótulos de grupo iban en la misma línea que los
+ * botones, así que "Operación" y "Administración" se leían como dos opciones más
+ * y no se entendía cuáles eran los accesos reales. Ahora el rótulo va arriba,
+ * chico y apagado: se lee como el título de la fila, no como algo que se toca.
+ */
+const GRUPOS: { titulo: string; items: NavItem[] }[] = [
+  {
+    titulo: 'Operación',
+    items: [
+      { k: 'distributions', l: 'Egresos', ayuda: 'Registrar y consultar la mercadería que sale del depósito' },
+      { k: 'items', l: 'Artículos', ayuda: 'Alta, edición y stock disponible de cada artículo' },
+      { k: 'movements', l: 'Movimientos', ayuda: 'Historial completo de ingresos y egresos' },
+    ],
+  },
+  {
+    titulo: 'Administración',
+    items: [
+      { k: 'supervisor', l: 'Supervisor', ayuda: 'Métricas del depósito y gestión de usuarios', tono: 'amber' },
+    ],
+  },
+  {
+    titulo: 'Ayuda',
+    items: [
+      { k: 'soporte', l: 'Soporte', ayuda: 'Abrir una consulta al equipo de sistemas y seguir su estado' },
+    ],
+  },
+]
+
+function NavButton({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
   // El estado activo se marca con relleno de acento Y aria-current: el color no
   // comunica solo. El tono ámbar distingue Supervisor sin salir de la escala
   // semántica de "atención".
-  const activeClass =
-    tone === 'amber'
-      ? 'bg-state-warn text-paper border-state-warn'
-      : 'bg-accent-strong text-accent-ink border-accent-strong'
-
-  const idleClass =
-    tone === 'amber'
-      ? 'bg-paper text-state-warn border-rule hover:border-state-warn'
-      : 'bg-paper text-ink-2 border-rule hover:text-ink hover:border-rule-strong'
+  const amber = item.tono === 'amber'
+  const activeClass = amber
+    ? 'bg-state-warn text-accent-ink border-state-warn'
+    : 'bg-accent-strong text-accent-ink border-accent-strong'
+  const idleClass = amber
+    ? 'bg-paper text-state-warn border-state-warn/40 hover:border-state-warn hover:bg-state-warn-bg'
+    : 'bg-paper text-ink-2 border-rule hover:text-ink hover:border-accent hover:bg-accent-soft'
 
   return (
     <button
       onClick={onClick}
+      data-tip={item.ayuda}
       aria-current={active ? 'page' : undefined}
       className={`min-h-[2.75rem] px-4 py-2.5 rounded-[--radius-input] border
         font-bold tracking-wide uppercase text-[length:--text-xs] sm:text-[length:--text-sm]
@@ -53,7 +76,7 @@ function NavButton({ label, active, tone = 'green', onClick }: NavButtonProps) {
         focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus
         ${active ? activeClass : idleClass}`}
     >
-      {label}
+      {item.l}
     </button>
   )
 }
@@ -89,6 +112,7 @@ function Shell({ children, userName, onLogout, onHelp, showHelpButton }: ShellPr
             {showHelpButton && (
               <button
                 onClick={onHelp}
+                data-tip="Guía de uso de la pantalla en la que estás"
                 className="min-h-[2.75rem] px-3 py-2 rounded-[--radius-input] border border-rule bg-paper
                   text-[length:--text-xs] font-bold tracking-wide uppercase text-ink-2
                   hover:text-ink hover:border-rule-strong transition-colors duration-[--dur-fast]
@@ -101,6 +125,7 @@ function Shell({ children, userName, onLogout, onHelp, showHelpButton }: ShellPr
             {userName && (
               <button
                 onClick={onLogout}
+                data-tip="Cerrar la sesión y volver al inicio"
                 className="min-h-[2.75rem] px-4 py-2 rounded-[--radius-input] border border-rule bg-paper
                   text-[length:--text-xs] font-bold tracking-wide uppercase text-ink-2
                   hover:text-ink hover:border-rule-strong transition-colors duration-[--dur-fast]
@@ -199,23 +224,31 @@ export default function App() {
       {/* Navegacion agrupada por uso: lo que se toca varias veces por dia queda
           separado de lo administrativo y de las utilidades transversales. Antes
           eran cinco pestañas planas en orden historico, sin jerarquia. */}
-      <nav aria-label="Navegación principal" className="hidden md:flex mb-6 flex-wrap items-center gap-x-3 gap-y-2">
-        <span className="text-[10px] font-black uppercase tracking-widest text-ink-3 mr-1">Operación</span>
-        <NavButton label="Egresos" active={tab === 'distributions'} onClick={() => setTab('distributions')} />
-        <NavButton label="Articulos" active={tab === 'items'} onClick={() => setTab('items')} />
-        <NavButton label="Movimientos" active={tab === 'movements'} onClick={() => setTab('movements')} />
-
-        {canOpenSupervisor && (
-          <>
-            <span className="w-px h-7 bg-rule mx-1" aria-hidden="true" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-ink-3 mr-1">Administración</span>
-            <NavButton label="Supervisor" active={tab === 'supervisor'} tone="amber" onClick={() => setTab('supervisor')} />
-          </>
-        )}
-
-        <span className="w-px h-7 bg-rule mx-1" aria-hidden="true" />
-        <span className="text-[10px] font-black uppercase tracking-widest text-ink-3 mr-1">Ayuda</span>
-        <NavButton label="Soporte" active={tab === 'soporte'} onClick={() => setTab('soporte')} />
+      <nav aria-label="Navegación principal" className="hidden md:flex mb-6 flex-wrap items-start gap-x-8 gap-y-4">
+        {GRUPOS.map((grupo) => {
+          const visibles = grupo.items.filter((i) => i.k !== 'supervisor' || canOpenSupervisor)
+          if (!visibles.length) return null
+          return (
+            <div key={grupo.titulo} className="flex flex-col gap-2">
+              <span
+                className="text-[10px] font-black uppercase tracking-[0.18em] text-ink-3 pl-1 select-none"
+                aria-hidden="true"
+              >
+                {grupo.titulo}
+              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                {visibles.map((item) => (
+                  <NavButton
+                    key={item.k}
+                    item={item}
+                    active={tab === item.k}
+                    onClick={() => setTab(item.k)}
+                  />
+                ))}
+              </div>
+            </div>
+          )
+        })}
       </nav>
 
       {tab === 'distributions' && <DistributionsPage />}
@@ -245,7 +278,7 @@ export default function App() {
                 aria-current={active ? 'page' : undefined}
                 className={`rounded-xl px-1 py-2 text-[10.5px] font-bold uppercase tracking-wide truncate ${
                   active
-                    ? amber ? 'bg-state-warn text-white' : 'bg-accent-strong text-white'
+                    ? amber ? 'bg-state-warn text-accent-ink' : 'bg-accent-strong text-accent-ink'
                     : amber ? 'bg-state-warn-bg text-state-warn' : 'bg-paper-3 text-ink-2'
                 }`}
               >

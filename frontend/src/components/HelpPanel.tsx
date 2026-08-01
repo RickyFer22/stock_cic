@@ -96,7 +96,7 @@ export default function HelpPanel({ open, onClose, currentTab, showSupervisorHel
         <div className="flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-accent-strong text-white text-sm font-bold uppercase tracking-wide hover:brightness-110 transition"
+            className="px-4 py-2 rounded-xl bg-accent-strong text-accent-ink text-sm font-bold uppercase tracking-wide hover:brightness-110 transition"
           >
             Entendido
           </button>

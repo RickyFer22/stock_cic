@@ -90,7 +90,7 @@ export default function LoginPage({ onLoggedIn }: { onLoggedIn: () => void }) {
           </div>
         </section>
 
-        <section className="lg:col-span-3 relative overflow-hidden rounded-[--radius-card] border border-white/40 bg-paper-2 backdrop-blur-xl shadow-[--shadow-card]">
+        <section className="lg:col-span-3 relative overflow-hidden rounded-[--radius-card] border border-rule bg-paper-2 backdrop-blur-xl shadow-[--shadow-card]">
           <div className="absolute inset-x-0 top-0 h-1.5 bg-accent-strong" />
 
           <div className="p-8 sm:p-10 flex flex-col h-full justify-center">

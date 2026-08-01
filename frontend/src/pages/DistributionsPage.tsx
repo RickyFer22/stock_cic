@@ -171,6 +171,7 @@ export default function DistributionsPage() {
             {/* Acción principal destacada */}
             <button
               onClick={() => setShowForm(true)}
+              data-tip="Cargar una salida de mercadería del depósito"
               className="px-5 py-2.5 rounded-xl bg-accent-strong text-accent-ink font-bold tracking-wide uppercase text-sm hover:brightness-110 shadow-md hover:shadow-lg transition-all order-first sm:order-none"
             >
               + Registrar egreso
@@ -182,6 +183,7 @@ export default function DistributionsPage() {
             </div>
             <button
               onClick={handleExportExcel}
+              data-tip="Descargar el listado completo de egresos en Excel"
               disabled={exporting || !rows.length}
               className="px-5 py-2.5 rounded-xl bg-paper border-2 border-rule shadow-sm text-xs sm:text-sm text-ink-2 font-bold uppercase tracking-wider hover:bg-paper-3 hover:border-rule-strong transition-all disabled:opacity-60"
             >
@@ -345,7 +347,7 @@ export default function DistributionsPage() {
                     // For now, keeping the old function call, but it might need adaptation.
                     mod.generateDistributionPDF(detail)
                   }}
-                  className="px-5 py-2.5 rounded-xl bg-accent-strong text-white font-bold tracking-wide hover:brightness-110 hover:shadow-md transition-all uppercase text-sm"
+                  className="px-5 py-2.5 rounded-xl bg-accent-strong text-accent-ink font-bold tracking-wide hover:brightness-110 hover:shadow-md transition-all uppercase text-sm"
                 >
                   Exportar PDF
                 </button>
@@ -435,7 +437,7 @@ export default function DistributionsPage() {
                       setPendingItemId('')
                     }
                   }}
-                  className="px-4 py-2 bg-ink text-white rounded-xl font-bold uppercase tracking-wide text-xs hover:bg-ink-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-ink text-paper rounded-xl font-bold uppercase tracking-wide text-xs hover:bg-ink-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
                  >
                    Añadir
                  </button>
@@ -507,7 +509,7 @@ export default function DistributionsPage() {
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="px-5 py-2 rounded-xl bg-accent-strong text-white font-bold tracking-widest disabled:opacity-50 hover:brightness-110 transition uppercase shadow-md"
+                  className="px-5 py-2 rounded-xl bg-accent-strong text-accent-ink font-bold tracking-widest disabled:opacity-50 hover:brightness-110 transition uppercase shadow-md"
                 >
                   {formLoading ? 'Registrando...' : 'Confirmar Egreso'}
                 </button>

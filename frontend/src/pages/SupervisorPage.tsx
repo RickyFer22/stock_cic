@@ -504,7 +504,7 @@ export default function SupervisorPage({ role }: { role: 'admin' | 'supervisor' 
               </button>
               <button 
                 type="submit" 
-                className="px-6 py-2.5 text-sm font-bold tracking-wide uppercase bg-accent-strong text-white hover:brightness-110 rounded-xl shadow-md transition-all"
+                className="px-6 py-2.5 text-sm font-bold tracking-wide uppercase bg-accent-strong text-accent-ink hover:brightness-110 rounded-xl shadow-md transition-all"
               >
                 Guardar Usuario
               </button>

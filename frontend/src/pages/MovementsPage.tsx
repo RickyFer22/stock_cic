@@ -131,7 +131,7 @@ export default function MovementsPage() {
           <button
             onClick={handleExport}
             disabled={downloading || total === 0}
-            className="px-4 py-2.5 rounded-xl bg-accent-strong text-white text-sm font-bold uppercase tracking-wider disabled:opacity-50 hover:brightness-110 transition"
+            className="px-4 py-2.5 rounded-xl bg-accent-strong text-accent-ink text-sm font-bold uppercase tracking-wider disabled:opacity-50 hover:brightness-110 transition"
           >
             {downloading ? 'Generando...' : 'Exportar Excel'}
           </button>

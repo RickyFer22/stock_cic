@@ -88,6 +88,60 @@ h1, h2, h3 {
   transition: none;
 }
 
+/* ── Tooltip ──────────────────────────────────────────────────────────────
+   Se usa con data-tip="texto". No se usa el title nativo porque tarda cerca
+   de un segundo en aparecer, no se puede dar estilo y no se muestra al llegar
+   con el teclado. Este aparece también en :focus-visible, así que quien navega
+   con Tab recibe la misma explicación que quien usa el mouse.
+
+   El texto va además en aria-describedby desde el JSX cuando hace falta; acá
+   es aria-hidden porque el contenido ya está en el atributo y los lectores de
+   pantalla no deben leerlo dos veces. */
+[data-tip] { position: relative; }
+
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 50%;
+  translate: -50% 0;
+  z-index: 60;
+
+  width: max-content;
+  max-width: 15rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.5rem;
+
+  background: var(--color-ink);
+  color: var(--color-paper);
+  /* El botón es mayúscula y con tracking; el tooltip es texto normal para que
+     se lea como una explicación y no como otra etiqueta. */
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
+  line-height: 1.35;
+  text-align: left;
+  white-space: normal;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+[data-tip]:hover::after,
+[data-tip]:focus-visible::after { opacity: 1; }
+
+/* Sin hover no hay forma de invocarlo y ocupa lugar sobre el contenido. */
+@media (hover: none) {
+  [data-tip]::after { content: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-tip]::after { transition: none; }
+}
+
 /* ── Tabla responsive ───────────────────────────────────────────
    Por debajo de 900 px cada fila se apila como tarjeta con etiquetas.
    Las celdas deben llevar data-label con el nombre de su columna.

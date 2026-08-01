@@ -303,7 +303,7 @@ export default function ItemsPage({ role }: { role: string | null }) {
         >
           {exporting === 'items' ? 'Generando…' : 'Exportar Excel'}
         </button>
-        <label className="px-5 py-2.5 rounded-xl bg-accent-strong text-white font-bold tracking-wide uppercase text-sm hover:brightness-110 transition-all shadow-md hover:shadow-lg cursor-pointer">
+        <label className="px-5 py-2.5 rounded-xl bg-accent-strong text-accent-ink font-bold tracking-wide uppercase text-sm hover:brightness-110 transition-all shadow-md hover:shadow-lg cursor-pointer">
           {importing ? 'Importando…' : 'Importar Excel'}
           <input
             type="file"
@@ -373,7 +373,7 @@ export default function ItemsPage({ role }: { role: string | null }) {
       {/* KPIs de estado de stock */}
       {health && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <div className="rounded-[--radius-card] p-3 bg-ink text-white shadow-md">
+          <div className="rounded-[--radius-card] p-3 bg-ink text-paper shadow-md">
             <div className="text-xs uppercase tracking-widest font-bold opacity-80">Ítems Activos</div>
             <div className="text-2xl font-black mt-1">{health.total}</div>
           </div>
@@ -524,7 +524,7 @@ export default function ItemsPage({ role }: { role: string | null }) {
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="px-5 py-2 rounded-xl bg-accent-strong text-white font-bold disabled:opacity-50 hover:brightness-110 transition"
+                  className="px-5 py-2 rounded-xl bg-accent-strong text-accent-ink font-bold disabled:opacity-50 hover:brightness-110 transition"
                 >
                   {formLoading ? 'Guardando...' : 'Crear Ítem'}
                 </button>
@@ -624,7 +624,7 @@ export default function ItemsPage({ role }: { role: string | null }) {
               <button
                 type="submit"
                 disabled={ingresoLoading}
-                className="px-5 py-2 rounded-xl bg-state-ok text-white font-bold disabled:opacity-50 hover:bg-state-ok transition"
+                className="px-5 py-2 rounded-xl bg-state-ok text-accent-ink font-bold disabled:opacity-50 hover:bg-state-ok transition"
               >
                 {ingresoLoading ? 'Guardando...' : 'Guardar Ingreso'}
               </button>
@@ -711,7 +711,7 @@ export default function ItemsPage({ role }: { role: string | null }) {
               <button
                 type="submit"
                 disabled={egresoLoading}
-                className="px-5 py-2 rounded-xl bg-state-danger text-white font-bold disabled:opacity-50 hover:bg-state-danger transition"
+                className="px-5 py-2 rounded-xl bg-state-danger text-accent-ink font-bold disabled:opacity-50 hover:bg-state-danger transition"
               >
                 {egresoLoading ? 'Guardando...' : 'Guardar Egreso'}
               </button>

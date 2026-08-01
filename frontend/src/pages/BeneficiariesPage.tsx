@@ -72,11 +72,11 @@ export default function BeneficiariesPage() {
         </button>
         <button
           onClick={() => apiDownload('/api/export/beneficiaries.xlsx', 'beneficiarios_san_roque.xlsx')}
-          className="px-5 py-2.5 rounded-xl bg-white border-2 border-rule shadow-sm font-bold tracking-wide text-ink-2 hover:bg-paper-2 hover:border-rule-strong transition-all uppercase text-sm"
+          className="px-5 py-2.5 rounded-xl bg-paper-2 border-2 border-rule shadow-sm font-bold tracking-wide text-ink-2 hover:bg-paper-2 hover:border-rule-strong transition-all uppercase text-sm"
         >
           Exportar Excel
         </button>
-        <label className="px-5 py-2.5 rounded-xl bg-accent-strong text-white font-bold tracking-wide uppercase text-sm hover:bg-accent transition-all shadow-md hover:shadow-lg cursor-pointer">
+        <label className="px-5 py-2.5 rounded-xl bg-accent-strong text-accent-ink font-bold tracking-wide uppercase text-sm hover:bg-accent transition-all shadow-md hover:shadow-lg cursor-pointer">
           {importing ? 'Importando...' : 'Importar Excel'}
           <input
             type="file"
@@ -119,7 +119,7 @@ export default function BeneficiariesPage() {
         </div>
       )}
 
-      <div className="bg-white/80 backdrop-blur-md border border-white/60 rounded-[2rem] shadow-card overflow-hidden">
+      <div className="bg-paper-2 border border-rule rounded-[2rem] shadow-card overflow-hidden">
         <div className="overflow-auto scrollbar-hide">
           <table className="min-w-full text-sm">
             <thead className="bg-paper-3/50">
@@ -233,7 +233,7 @@ export default function BeneficiariesPage() {
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="px-5 py-2 rounded-xl bg-accent-strong text-white font-bold disabled:opacity-50 hover:bg-accent transition"
+                  className="px-5 py-2 rounded-xl bg-accent-strong text-accent-ink font-bold disabled:opacity-50 hover:bg-accent transition"
                 >
                   {formLoading ? 'Guardando...' : 'Guardar Beneficiario'}
                 </button>

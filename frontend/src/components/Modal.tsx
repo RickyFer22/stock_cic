@@ -86,7 +86,7 @@ export default function Modal({ title, children, onClose, size = 'md', confirmar
         aria-modal="true"
         aria-labelledby={tituloId}
         tabIndex={-1}
-        className={`bg-white rounded-[2rem] shadow-2xl w-full ${widthClass} animate-fade-in flex flex-col max-h-[90vh] overflow-hidden border border-rule`}
+        className={`bg-paper-2 rounded-[2rem] shadow-2xl w-full ${widthClass} animate-fade-in flex flex-col max-h-[90vh] overflow-hidden border border-rule`}
       >
         <div className="flex items-center justify-between px-8 py-6 border-b border-rule shrink-0 bg-paper-2">
           <h2 id={tituloId} className="font-display font-black text-accent text-xl uppercase tracking-wider">
