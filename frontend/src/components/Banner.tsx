@@ -3,9 +3,9 @@ export type BannerTone = 'success' | 'error' | 'info'
 export type Feedback = { tone: BannerTone; text: string } | null
 
 const TONE_CLASS: Record<BannerTone, string> = {
-  success: 'bg-emerald-50 border-emerald-200 text-emerald-800',
-  error: 'bg-rose-50 border-rose-200 text-rose-800',
-  info: 'bg-sky-50 border-sky-200 text-sky-800',
+  success: 'bg-state-ok-bg border-state-ok/25 text-state-ok',
+  error: 'bg-state-danger-bg border-state-danger/25 text-state-danger',
+  info: 'bg-state-info-bg border-state-info-bg text-state-info',
 }
 
 const TONE_ICON: Record<BannerTone, string> = {
@@ -24,7 +24,7 @@ export default function Banner({ feedback, onDismiss }: { feedback: Feedback; on
     <div
       role="status"
       aria-live="polite"
-      className={`flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm font-semibold ${TONE_CLASS[feedback.tone]}`}
+      className={`flex items-start gap-3 rounded-[--radius-card] border px-4 py-3 text-sm font-semibold ${TONE_CLASS[feedback.tone]}`}
     >
       <span aria-hidden="true" className="text-base leading-5">{TONE_ICON[feedback.tone]}</span>
       <span className="flex-1">{feedback.text}</span>

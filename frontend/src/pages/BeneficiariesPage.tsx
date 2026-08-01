@@ -60,23 +60,23 @@ export default function BeneficiariesPage() {
   const header = useMemo(() => (
     <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
       <div>
-        <h1 className="font-display font-black text-brand-green-900 text-3xl uppercase tracking-wider">Beneficiarios</h1>
-        <p className="text-slate-600 mt-1 font-medium text-sm">Padrón para evitar duplicados y agilizar operativa.</p>
+        <h1 className="font-display font-black text-accent-strong text-3xl uppercase tracking-wider">Beneficiarios</h1>
+        <p className="text-ink-2 mt-1 font-medium text-sm">Padrón para evitar duplicados y agilizar operativa.</p>
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <button
           onClick={() => setShowForm(true)}
-          className="px-5 py-2.5 rounded-xl bg-brand-gold-500 text-brand-green-900 font-bold tracking-wide uppercase text-sm hover:brightness-110 shadow-md hover:shadow-lg transition-all"
+          className="px-5 py-2.5 rounded-xl bg-state-warn text-accent-strong font-bold tracking-wide uppercase text-sm hover:brightness-110 shadow-md hover:shadow-lg transition-all"
         >
           + Nuevo Beneficiario
         </button>
         <button
           onClick={() => apiDownload('/api/export/beneficiaries.xlsx', 'beneficiarios_san_roque.xlsx')}
-          className="px-5 py-2.5 rounded-xl bg-white border-2 border-slate-200 shadow-sm font-bold tracking-wide text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all uppercase text-sm"
+          className="px-5 py-2.5 rounded-xl bg-white border-2 border-rule shadow-sm font-bold tracking-wide text-ink-2 hover:bg-paper-2 hover:border-rule-strong transition-all uppercase text-sm"
         >
           Exportar Excel
         </button>
-        <label className="px-5 py-2.5 rounded-xl bg-brand-green-900 text-white font-bold tracking-wide uppercase text-sm hover:bg-brand-green-700 transition-all shadow-md hover:shadow-lg cursor-pointer">
+        <label className="px-5 py-2.5 rounded-xl bg-accent-strong text-white font-bold tracking-wide uppercase text-sm hover:bg-accent transition-all shadow-md hover:shadow-lg cursor-pointer">
           {importing ? 'Importando...' : 'Importar Excel'}
           <input
             type="file"
@@ -122,8 +122,8 @@ export default function BeneficiariesPage() {
       <div className="bg-white/80 backdrop-blur-md border border-white/60 rounded-[2rem] shadow-card overflow-hidden">
         <div className="overflow-auto scrollbar-hide">
           <table className="min-w-full text-sm">
-            <thead className="bg-slate-100/50">
-              <tr className="text-left text-slate-500 uppercase tracking-wider text-xs">
+            <thead className="bg-paper-3/50">
+              <tr className="text-left text-ink-3 uppercase tracking-wider text-xs">
                 <th className="px-5 py-4 font-bold">DNI</th>
                 <th className="px-5 py-4 font-bold">Apellido</th>
                 <th className="px-5 py-4 font-bold">Nombre</th>
@@ -133,12 +133,12 @@ export default function BeneficiariesPage() {
             </thead>
             <tbody>
               {rows.map((b) => (
-                <tr key={b.id} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
-                  <td className="px-5 py-4 font-bold text-brand-green-900">{b.dni}</td>
-                  <td className="px-5 py-4 font-semibold text-slate-900">{b.apellido}</td>
-                  <td className="px-5 py-4 text-slate-600">{b.nombre}</td>
-                  <td className="px-5 py-4 text-slate-500 font-medium">{b.barrio || '-'}</td>
-                  <td className="px-5 py-4 text-slate-500">{b.telefono || '-'}</td>
+                <tr key={b.id} className="border-t border-paper-3 hover:bg-paper-2 transition-colors">
+                  <td className="px-5 py-4 font-bold text-accent-strong">{b.dni}</td>
+                  <td className="px-5 py-4 font-semibold text-ink">{b.apellido}</td>
+                  <td className="px-5 py-4 text-ink-2">{b.nombre}</td>
+                  <td className="px-5 py-4 text-ink-3 font-medium">{b.barrio || '-'}</td>
+                  <td className="px-5 py-4 text-ink-3">{b.telefono || '-'}</td>
                 </tr>
               ))}
             </tbody>
@@ -151,22 +151,22 @@ export default function BeneficiariesPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
              <div className="grid grid-cols-2 gap-4">
                <label className="block col-span-2 sm:col-span-1">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">DNI</span>
+                  <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">DNI</span>
                   <input
                     required
                     maxLength={10}
                     value={formData.dni}
                     onChange={e => setFormData({ ...formData, dni: e.target.value })}
-                    className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-brand-green-500 focus:border-brand-green-500 outline-none"
+                    className="mt-1 block w-full rounded-xl border border-rule-strong px-4 py-2 focus:ring-2 focus:ring-accent focus:border-accent outline-none"
                     placeholder="Ej: 30123456"
                   />
                </label>
                <label className="block col-span-2 sm:col-span-1">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Teléfono</span>
+                  <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Teléfono</span>
                   <input
                     value={formData.telefono}
                     onChange={e => setFormData({ ...formData, telefono: e.target.value })}
-                    className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-brand-green-500 focus:border-brand-green-500 outline-none"
+                    className="mt-1 block w-full rounded-xl border border-rule-strong px-4 py-2 focus:ring-2 focus:ring-accent focus:border-accent outline-none"
                     placeholder="Ej: 3777-123456"
                   />
                </label>
@@ -174,22 +174,22 @@ export default function BeneficiariesPage() {
              
              <div className="grid grid-cols-2 gap-4">
                <label className="block col-span-2 sm:col-span-1">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Nombre</span>
+                  <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Nombre</span>
                   <input
                     required
                     value={formData.nombre}
                     onChange={e => setFormData({ ...formData, nombre: e.target.value })}
-                    className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-brand-green-500 focus:border-brand-green-500 outline-none"
+                    className="mt-1 block w-full rounded-xl border border-rule-strong px-4 py-2 focus:ring-2 focus:ring-accent focus:border-accent outline-none"
                     placeholder="Ej: Juan"
                   />
                </label>
                <label className="block col-span-2 sm:col-span-1">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Apellido</span>
+                  <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Apellido</span>
                   <input
                     required
                     value={formData.apellido}
                     onChange={e => setFormData({ ...formData, apellido: e.target.value })}
-                    className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-brand-green-500 focus:border-brand-green-500 outline-none"
+                    className="mt-1 block w-full rounded-xl border border-rule-strong px-4 py-2 focus:ring-2 focus:ring-accent focus:border-accent outline-none"
                     placeholder="Ej: Pérez"
                   />
                </label>
@@ -197,20 +197,20 @@ export default function BeneficiariesPage() {
 
              <div className="grid grid-cols-2 gap-4">
                <label className="block col-span-2">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Dirección</span>
+                  <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Dirección</span>
                   <input
                     value={formData.direccion}
                     onChange={e => setFormData({ ...formData, direccion: e.target.value })}
-                    className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-brand-green-500 focus:border-brand-green-500 outline-none"
+                    className="mt-1 block w-full rounded-xl border border-rule-strong px-4 py-2 focus:ring-2 focus:ring-accent focus:border-accent outline-none"
                     placeholder="Ej: San Martín 123"
                   />
                </label>
                <label className="block col-span-2">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Barrio</span>
+                  <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Barrio</span>
                   <input
                     value={formData.barrio}
                     onChange={e => setFormData({ ...formData, barrio: e.target.value })}
-                    className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-brand-green-500 focus:border-brand-green-500 outline-none"
+                    className="mt-1 block w-full rounded-xl border border-rule-strong px-4 py-2 focus:ring-2 focus:ring-accent focus:border-accent outline-none"
                     placeholder="Ej: Centro"
                   />
                </label>
@@ -226,14 +226,14 @@ export default function BeneficiariesPage() {
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="px-4 py-2 rounded-xl text-slate-600 font-semibold hover:bg-slate-100 transition"
+                  className="px-4 py-2 rounded-xl text-ink-2 font-semibold hover:bg-paper-3 transition"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="px-5 py-2 rounded-xl bg-brand-green-900 text-white font-bold disabled:opacity-50 hover:bg-brand-green-700 transition"
+                  className="px-5 py-2 rounded-xl bg-accent-strong text-white font-bold disabled:opacity-50 hover:bg-accent transition"
                 >
                   {formLoading ? 'Guardando...' : 'Guardar Beneficiario'}
                 </button>

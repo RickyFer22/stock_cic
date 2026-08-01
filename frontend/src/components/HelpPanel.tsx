@@ -65,9 +65,9 @@ export default function HelpPanel({ open, onClose, currentTab, showSupervisorHel
   return (
     <Modal title="Ayuda Rapida" onClose={onClose} size="lg">
       <div className="space-y-5">
-        <div className="rounded-2xl border border-brand-green-200 bg-brand-green-50 px-4 py-3">
-          <p className="text-sm font-bold text-brand-green-900 uppercase tracking-wide">{current.title}</p>
-          <ol className="mt-2 space-y-2 text-sm text-slate-700 list-decimal list-inside">
+        <div className="rounded-[--radius-card] border border-accent/25 bg-accent-soft px-4 py-3">
+          <p className="text-sm font-bold text-accent uppercase tracking-wide">{current.title}</p>
+          <ol className="mt-2 space-y-2 text-sm text-ink-2 list-decimal list-inside">
             {current.steps.map((step) => (
               <li key={step}>{step}</li>
             ))}
@@ -75,18 +75,18 @@ export default function HelpPanel({ open, onClose, currentTab, showSupervisorHel
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Consejos generales</p>
-            <ul className="mt-2 space-y-1.5 text-sm text-slate-700">
+          <div className="rounded-[--radius-card] border border-rule bg-paper px-4 py-3">
+            <p className="text-xs font-bold uppercase tracking-wider text-ink-3">Consejos generales</p>
+            <ul className="mt-2 space-y-1.5 text-sm text-ink-2">
               {commonTips.map((tip) => (
                 <li key={tip}>• {tip}</li>
               ))}
             </ul>
           </div>
 
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-wider text-amber-700">Modulos disponibles</p>
-            <div className="mt-2 text-sm text-slate-700 leading-relaxed">
+          <div className="rounded-[--radius-card] border border-state-warn/25 bg-state-warn-bg px-4 py-3">
+            <p className="text-xs font-bold uppercase tracking-wider text-state-warn">Modulos disponibles</p>
+            <div className="mt-2 text-sm text-ink-2 leading-relaxed">
               Egresos, Articulos y Movimientos para todos los roles.
               {showSupervisorHelp ? ' Supervisor habilitado para admin y supervisor.' : ' Supervisor solo para roles con permiso.'}
             </div>
@@ -96,7 +96,7 @@ export default function HelpPanel({ open, onClose, currentTab, showSupervisorHel
         <div className="flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-brand-green-900 text-white text-sm font-bold uppercase tracking-wide hover:bg-brand-green-700 transition"
+            className="px-4 py-2 rounded-xl bg-accent-strong text-white text-sm font-bold uppercase tracking-wide hover:brightness-110 transition"
           >
             Entendido
           </button>

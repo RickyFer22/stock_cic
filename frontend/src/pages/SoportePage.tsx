@@ -231,10 +231,10 @@ export default function SoportePage({ role }: { role: string | null }) {
               onClick={() => setVista(v.k)}
               aria-pressed={vista === v.k}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wide border-2 transition-all
-                focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-700
+                focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus
                 ${vista === v.k
-                  ? 'bg-brand-green-900 text-white border-brand-green-900'
-                  : 'bg-white text-slate-600 border-slate-200 hover:border-brand-green-500'}`}
+                  ? 'bg-accent-strong text-accent-ink border-accent-strong'
+                  : 'bg-paper text-ink-2 border-rule hover:border-focus'}`}
             >
               {v.l}
             </button>
@@ -249,13 +249,13 @@ export default function SoportePage({ role }: { role: string | null }) {
               value={q}
               onChange={e => setQ(e.target.value)}
               placeholder="Número, título o texto de la consulta"
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand-green-700"
+              className="w-full rounded-xl border border-rule bg-paper px-4 py-2.5 text-sm outline-none focus:border-focus"
             />
           </div>
           <div>
             <Label htmlFor="estado-soporte">Estado</Label>
             <select id="estado-soporte" value={estado} onChange={e => setEstado(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold outline-none focus:border-brand-green-700">
+              className="w-full rounded-xl border border-rule bg-paper px-4 py-2.5 text-sm font-semibold outline-none focus:border-focus">
               <option value="todos">Todos</option>
               {meta.estados.map(s => (
                 <option key={s} value={s}>{s}{contadores[s] ? ` (${contadores[s]})` : ''}</option>
@@ -265,7 +265,7 @@ export default function SoportePage({ role }: { role: string | null }) {
           <div>
             <Label htmlFor="prio-soporte">Prioridad</Label>
             <select id="prio-soporte" value={prioridad} onChange={e => setPrioridad(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold outline-none focus:border-brand-green-700">
+              className="w-full rounded-xl border border-rule bg-paper px-4 py-2.5 text-sm font-semibold outline-none focus:border-focus">
               <option value="todas">Todas</option>
               {meta.prioridades.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
@@ -275,7 +275,7 @@ export default function SoportePage({ role }: { role: string | null }) {
         {hayFiltros && (
           <button
             onClick={() => { setVista('abiertos'); setEstado('todos'); setPrioridad('todas'); setQ('') }}
-            className="mt-3 text-sm font-bold text-slate-500 hover:text-slate-700 underline underline-offset-2"
+            className="mt-3 text-sm font-bold text-ink-3 hover:text-ink underline underline-offset-2"
           >
             Limpiar filtros
           </button>
@@ -299,21 +299,21 @@ export default function SoportePage({ role }: { role: string | null }) {
                 <div className="flex flex-col sm:flex-row gap-4 justify-between sm:items-start">
                   <div className="min-w-0 flex-1 space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
+                      <span className="font-mono text-xs font-bold text-ink-3 bg-paper-3 px-2 py-1 rounded-md">
                         #{String(t.numero).padStart(4, '0')}
                       </span>
                       <Badge tone={TONO_ESTADO[t.estado] || 'neutral'}>{t.estado}</Badge>
                       <Badge tone={TONO_PRIORIDAD[t.prioridad] || 'neutral'}>{t.prioridad}</Badge>
                       {estaVencida(t) && <Badge tone="danger">Vencida</Badge>}
                     </div>
-                    <p className="font-bold text-slate-900">{t.titulo}</p>
-                    <p className="text-sm text-slate-500">{t.consulta.slice(0, 160)}{t.consulta.length > 160 ? '…' : ''}</p>
-                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500">
-                      <span><b className="text-slate-600">{t.solicitante}</b></span>
+                    <p className="font-bold text-ink">{t.titulo}</p>
+                    <p className="text-sm text-ink-3">{t.consulta.slice(0, 160)}{t.consulta.length > 160 ? '…' : ''}</p>
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-ink-3">
+                      <span><b className="text-ink-2">{t.solicitante}</b></span>
                       <span>· {t.categoria}</span>
                       <span>· {formatFecha(t.created_at)}</span>
                       <span>· {tiempoRelativo(t.created_at)}</span>
-                      {t.responsable && <span>· Atiende: <b className="text-slate-600">{t.responsable}</b></span>}
+                      {t.responsable && <span>· Atiende: <b className="text-ink-2">{t.responsable}</b></span>}
                     </div>
                   </div>
                   <Button variant="secondary" onClick={() => abrirDetalle(t.id)} className="shrink-0">
@@ -343,7 +343,7 @@ export default function SoportePage({ role }: { role: string | null }) {
                 id="n-titulo" value={nuevo.titulo} maxLength={120}
                 onChange={e => setNuevo(p => ({ ...p, titulo: e.target.value }))}
                 placeholder="Ej: No puedo registrar el egreso de leche"
-                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none focus:border-brand-green-700"
+                className="w-full rounded-xl border border-rule px-4 py-2.5 outline-none focus:border-focus"
               />
             </div>
             <div>
@@ -351,7 +351,7 @@ export default function SoportePage({ role }: { role: string | null }) {
               <select
                 id="n-cat" value={nuevo.categoria}
                 onChange={e => setNuevo(p => ({ ...p, categoria: e.target.value }))}
-                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 font-semibold outline-none focus:border-brand-green-700"
+                className="w-full rounded-xl border border-rule px-4 py-2.5 font-semibold outline-none focus:border-focus"
               >
                 <option value="">Seleccioná una opción</option>
                 {meta.categorias.map(c => <option key={c} value={c}>{c}</option>)}
@@ -363,10 +363,10 @@ export default function SoportePage({ role }: { role: string | null }) {
                 id="n-desc" rows={5} value={nuevo.consulta}
                 onChange={e => setNuevo(p => ({ ...p, consulta: e.target.value }))}
                 placeholder="Si podés, indicá en qué pantalla ocurrió y qué esperabas que sucediera."
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-brand-green-700 resize-y"
+                className="w-full rounded-xl border border-rule px-4 py-3 outline-none focus:border-focus resize-y"
               />
               <p className={`text-xs font-semibold mt-1 ${
-                nuevo.consulta.trim().length > 0 && nuevo.consulta.trim().length < 15 ? 'text-rose-600' : 'text-slate-500'
+                nuevo.consulta.trim().length > 0 && nuevo.consulta.trim().length < 15 ? 'text-state-danger' : 'text-ink-3'
               }`}>
                 {nuevo.consulta.trim().length > 0 && nuevo.consulta.trim().length < 15
                   ? `Faltan ${15 - nuevo.consulta.trim().length} caracteres`
@@ -392,24 +392,24 @@ export default function SoportePage({ role }: { role: string | null }) {
             <EmptyState icon="⏳" message="Cargando" sub="Abriendo la consulta…" />
           ) : (
             <div className="space-y-5">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+              <div className="rounded-[--radius-card] border border-rule bg-paper-2 p-4 space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge tone={TONO_ESTADO[detalle.estado] || 'neutral'}>{detalle.estado}</Badge>
                   <Badge tone={TONO_PRIORIDAD[detalle.prioridad] || 'neutral'}>{detalle.prioridad}</Badge>
                   {estaVencida(detalle) && <Badge tone="danger">Vencida</Badge>}
                 </div>
-                <h3 className="font-bold text-lg text-slate-900">{detalle.titulo}</h3>
-                <p className="text-slate-700 whitespace-pre-line">{detalle.consulta}</p>
-                <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-3 border-t border-slate-200">
-                  <div><dt className="text-slate-400 font-bold uppercase">Solicitante</dt><dd className="font-semibold text-slate-700">{detalle.solicitante}</dd></div>
-                  <div><dt className="text-slate-400 font-bold uppercase">Tipo</dt><dd className="font-semibold text-slate-700">{detalle.categoria}</dd></div>
-                  <div><dt className="text-slate-400 font-bold uppercase">Abierta</dt><dd className="font-semibold text-slate-700">{formatFecha(detalle.created_at)}</dd></div>
-                  <div><dt className="text-slate-400 font-bold uppercase">Atiende</dt><dd className="font-semibold text-slate-700">{detalle.responsable || 'Sin asignar'}</dd></div>
+                <h3 className="font-bold text-lg text-ink">{detalle.titulo}</h3>
+                <p className="text-ink-2 whitespace-pre-line">{detalle.consulta}</p>
+                <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-3 border-t border-rule">
+                  <div><dt className="text-ink-3 font-bold uppercase">Solicitante</dt><dd className="font-semibold text-ink-2">{detalle.solicitante}</dd></div>
+                  <div><dt className="text-ink-3 font-bold uppercase">Tipo</dt><dd className="font-semibold text-ink-2">{detalle.categoria}</dd></div>
+                  <div><dt className="text-ink-3 font-bold uppercase">Abierta</dt><dd className="font-semibold text-ink-2">{formatFecha(detalle.created_at)}</dd></div>
+                  <div><dt className="text-ink-3 font-bold uppercase">Atiende</dt><dd className="font-semibold text-ink-2">{detalle.responsable || 'Sin asignar'}</dd></div>
                 </dl>
               </div>
 
               {esSoporte && (
-                <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 p-4">
+                <div className="flex flex-wrap items-end gap-3 rounded-[--radius-card] border border-rule p-4">
                   <div className="min-w-[160px] flex-1">
                     <Label htmlFor="d-estado">Estado</Label>
                     <select id="d-estado" value={detalle.estado}
@@ -417,7 +417,7 @@ export default function SoportePage({ role }: { role: string | null }) {
                         if (e.target.value === 'Cerrado') setConfirmarCierre(true)
                         else actualizar({ estado: e.target.value }, 'Estado actualizado.')
                       }}
-                      className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold outline-none focus:border-brand-green-700">
+                      className="w-full rounded-xl border border-rule px-3 py-2 text-sm font-semibold outline-none focus:border-focus">
                       {meta.estados.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
@@ -425,7 +425,7 @@ export default function SoportePage({ role }: { role: string | null }) {
                     <Label htmlFor="d-prio">Prioridad</Label>
                     <select id="d-prio" value={detalle.prioridad}
                       onChange={e => actualizar({ prioridad: e.target.value }, 'Prioridad actualizada.')}
-                      className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold outline-none focus:border-brand-green-700">
+                      className="w-full rounded-xl border border-rule px-3 py-2 text-sm font-semibold outline-none focus:border-focus">
                       {meta.prioridades.map(p => <option key={p} value={p}>{p}</option>)}
                     </select>
                   </div>
@@ -438,8 +438,8 @@ export default function SoportePage({ role }: { role: string | null }) {
               )}
 
               {!esSoporte && ['Resuelto', 'Cerrado'].includes(detalle.estado) && (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm text-amber-900 font-semibold">¿El problema sigue ocurriendo?</p>
+                <div className="rounded-[--radius-card] border border-state-warn/25 bg-state-warn-bg p-4 flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm text-state-warn font-semibold">¿El problema sigue ocurriendo?</p>
                   <Button variant="secondary" onClick={() => actualizar({ estado: 'Reabierto' }, 'Consulta reabierta.')}>
                     Reabrir consulta
                   </Button>
@@ -447,27 +447,27 @@ export default function SoportePage({ role }: { role: string | null }) {
               )}
 
               <div>
-                <h4 className="font-bold text-slate-900 mb-3">Conversación</h4>
+                <h4 className="font-bold text-ink mb-3">Conversación</h4>
                 {detalle.mensajes.length === 0 ? (
-                  <p className="text-sm text-slate-500 italic py-3">Todavía no hay respuestas.</p>
+                  <p className="text-sm text-ink-3 italic py-3">Todavía no hay respuestas.</p>
                 ) : (
                   <ul className="space-y-3 max-h-[38vh] overflow-y-auto pr-1">
                     {detalle.mensajes.map(m => (
-                      <li key={m.id} className={`rounded-2xl p-4 border ${
+                      <li key={m.id} className={`rounded-[--radius-card] p-4 border ${
                         m.visibilidad === 'interna'
-                          ? 'bg-amber-50 border-amber-300 border-dashed'
-                          : 'bg-white border-slate-200'
+                          ? 'bg-state-warn-bg border-state-warn-bg border-dashed'
+                          : 'bg-paper border-rule'
                       }`}>
                         {/* La nota interna se distingue por texto, borde punteado y
                             fondo: para algo que no debe leer el solicitante no
                             alcanza con un matiz de color. */}
                         {m.visibilidad === 'interna' && (
-                          <p className="text-[10px] font-black uppercase tracking-widest text-amber-700 mb-1">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-state-warn mb-1">
                             Nota interna · no la ve el solicitante
                           </p>
                         )}
-                        <p className="text-sm text-slate-800 whitespace-pre-line">{m.cuerpo}</p>
-                        <p className="text-[11px] text-slate-400 mt-2 font-semibold">
+                        <p className="text-sm text-ink whitespace-pre-line">{m.cuerpo}</p>
+                        <p className="text-[11px] text-ink-3 mt-2 font-semibold">
                           {m.autor || 'Sistema'} · {formatFecha(m.created_at)}
                         </p>
                       </li>
@@ -477,19 +477,19 @@ export default function SoportePage({ role }: { role: string | null }) {
               </div>
 
               {detalle.estado !== 'Cerrado' && (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                <div className="rounded-[--radius-card] border border-rule bg-paper-2 p-4 space-y-3">
                   <Label htmlFor="d-resp">Responder</Label>
                   <textarea
                     id="d-resp" rows={3} value={respuesta}
                     onChange={e => setRespuesta(e.target.value)}
                     placeholder="Escribí tu respuesta…"
-                    className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-brand-green-700 resize-y"
+                    className="w-full rounded-xl border border-rule px-4 py-3 text-sm outline-none focus:border-focus resize-y"
                   />
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     {esSoporte && (
-                      <label className="flex items-center gap-2 text-sm font-semibold text-slate-600 cursor-pointer">
+                      <label className="flex items-center gap-2 text-sm font-semibold text-ink-2 cursor-pointer">
                         <input type="checkbox" checked={esNotaInterna} onChange={e => setEsNotaInterna(e.target.checked)}
-                          className="h-4 w-4 rounded border-slate-300 accent-amber-600" />
+                          className="h-4 w-4 rounded border-rule accent-[--color-warn]" />
                         Nota interna (no la ve el solicitante)
                       </label>
                     )}
@@ -501,18 +501,18 @@ export default function SoportePage({ role }: { role: string | null }) {
               )}
 
               {detalle.eventos.length > 0 && (
-                <details className="rounded-2xl border border-slate-200 p-4">
-                  <summary className="font-bold text-slate-700 cursor-pointer text-sm">
+                <details className="rounded-[--radius-card] border border-rule p-4">
+                  <summary className="font-bold text-ink-2 cursor-pointer text-sm">
                     Historial ({detalle.eventos.length})
                   </summary>
                   <ul className="mt-3 space-y-2">
                     {detalle.eventos.map((e, i) => (
-                      <li key={i} className="text-xs text-slate-600 flex flex-wrap gap-1">
-                        <span className="font-semibold text-slate-800">{e.actor || 'Sistema'}</span>
+                      <li key={i} className="text-xs text-ink-2 flex flex-wrap gap-1">
+                        <span className="font-semibold text-ink">{e.actor || 'Sistema'}</span>
                         <span>{TEXTO_EVENTO[e.tipo] || e.tipo}</span>
                         {e.valor_anterior && <span>de <b>{e.valor_anterior}</b></span>}
                         {e.valor_nuevo && <span>a <b>{e.valor_nuevo}</b></span>}
-                        <span className="text-slate-400">· {formatFecha(e.created_at)}</span>
+                        <span className="text-ink-3">· {formatFecha(e.created_at)}</span>
                       </li>
                     ))}
                   </ul>

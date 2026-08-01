@@ -164,26 +164,26 @@ export default function DistributionsPage() {
       <div className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <h1 className="font-display font-black text-brand-green-900 text-3xl uppercase tracking-wider">Egresos</h1>
-            <p className="text-slate-600 mt-1 font-medium text-sm">Registro de mercadería entregada, descartada o transferida.</p>
+            <h1 className="font-display font-extrabold text-ink text-3xl uppercase tracking-wider">Egresos</h1>
+            <p className="text-ink-2 mt-1 font-medium text-sm">Registro de mercadería entregada, descartada o transferida.</p>
           </div>
           <div className="flex flex-wrap items-center gap-3 sm:gap-4">
             {/* Acción principal destacada */}
             <button
               onClick={() => setShowForm(true)}
-              className="px-5 py-2.5 rounded-xl bg-brand-gold-500 text-brand-green-900 font-bold tracking-wide uppercase text-sm hover:brightness-110 shadow-md hover:shadow-lg transition-all order-first sm:order-none"
+              className="px-5 py-2.5 rounded-xl bg-accent-strong text-accent-ink font-bold tracking-wide uppercase text-sm hover:brightness-110 shadow-md hover:shadow-lg transition-all order-first sm:order-none"
             >
               + Registrar egreso
             </button>
-            <div className="w-px h-8 bg-slate-200 hidden sm:block" aria-hidden />
+            <div className="w-px h-8 bg-rule hidden sm:block" aria-hidden />
             {/* Resumen y exportación */}
-            <div className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-sm font-bold uppercase tracking-wider">
-              Total: <span className="text-brand-green-900 text-base">{formatNumero(pagination?.total ?? 0)}</span>
+            <div className="px-4 py-2.5 rounded-xl bg-paper-3 text-ink-2 text-sm font-bold uppercase tracking-wider">
+              Total: <span className="text-accent text-base">{formatNumero(pagination?.total ?? 0)}</span>
             </div>
             <button
               onClick={handleExportExcel}
               disabled={exporting || !rows.length}
-              className="px-5 py-2.5 rounded-xl bg-white border-2 border-slate-200 shadow-sm text-xs sm:text-sm text-slate-700 font-bold uppercase tracking-wider hover:bg-slate-50 hover:border-slate-300 transition-all disabled:opacity-60"
+              className="px-5 py-2.5 rounded-xl bg-paper border-2 border-rule shadow-sm text-xs sm:text-sm text-ink-2 font-bold uppercase tracking-wider hover:bg-paper-3 hover:border-rule-strong transition-all disabled:opacity-60"
             >
               {exporting ? 'Exportando…' : 'Exportar Excel'}
             </button>
@@ -212,17 +212,17 @@ export default function DistributionsPage() {
         ]}
       />
 
-      <div className="bg-white/80 backdrop-blur-md border border-white/60 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+      <div className="bg-paper-2 border border-rule rounded-[--radius-card] p-4 shadow-sm flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
         <input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Buscar por destino, operador u observación..."
-          className="w-full md:max-w-xl rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand-green-700"
+          className="w-full md:max-w-xl rounded-xl border border-rule bg-paper px-4 py-2.5 text-sm outline-none focus:border-focus"
         />
         <select
           value={typeFilter}
           onChange={(event) => setTypeFilter(event.target.value as 'all' | 'delivery' | 'transfer_out' | 'waste' | 'adjustment')}
-          className="w-full md:w-64 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold outline-none focus:border-brand-green-700"
+          className="w-full md:w-64 rounded-xl border border-rule bg-paper px-4 py-2.5 text-sm font-semibold outline-none focus:border-focus"
         >
           <option value="all">Todos los tipos</option>
           <option value="delivery">Entrega</option>
@@ -237,11 +237,11 @@ export default function DistributionsPage() {
       ) : !filteredRows.length ? (
         <EmptyState message="Sin resultados" sub="Ajustá la búsqueda o los filtros para ver egresos." />
       ) : (
-      <div className="bg-white/80 backdrop-blur-md border border-white/60 rounded-[2rem] shadow-card overflow-hidden">
+      <div className="bg-paper-2 border border-rule rounded-[--radius-card] shadow-[--shadow-card] overflow-hidden">
         <div className="overflow-auto scrollbar-hide">
           <table className="min-w-full text-sm">
-            <thead className="bg-slate-100/50">
-              <tr className="text-left text-slate-500 uppercase tracking-wider text-xs">
+            <thead className="bg-paper-3">
+              <tr className="text-left text-ink-3 uppercase tracking-wider text-xs">
                 <th className="px-5 py-4 font-bold">Fecha</th>
                 <th className="px-5 py-4 font-bold">Tipo</th>
                 <th className="px-5 py-4 font-bold">Destino / Observación</th>
@@ -252,35 +252,35 @@ export default function DistributionsPage() {
               {filteredRows.map((r) => (
                 <tr
                   key={r.id}
-                  className="border-t border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer focus-within:bg-slate-50"
+                  className="border-t border-rule hover:bg-paper-3 transition-colors cursor-pointer focus-within:bg-paper-2"
                   onClick={() => setSelectedId(r.id)}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedId(r.id) } }}
                   tabIndex={0}
                   role="button"
                   aria-label={`Ver detalle del egreso del ${formatFecha(r.fecha)} a ${r.counterparty || 'destino sin especificar'}`}
                 >
-                  <td className="px-5 py-4 whitespace-nowrap text-slate-600 font-medium tabular-nums">{formatFecha(r.fecha)}</td>
-                  <td className="px-5 py-4 text-slate-700 font-bold">
+                  <td className="px-5 py-4 whitespace-nowrap text-ink-2 font-medium tabular-nums">{formatFecha(r.fecha)}</td>
+                  <td className="px-5 py-4 text-ink-2 font-bold">
                     {MOVEMENT_TYPE_LABEL[r.movement_type] || r.movement_type}
                   </td>
-                  <td className="px-5 py-4 text-slate-700 font-semibold">
-                    {r.counterparty || <span className="text-slate-400 font-normal">Sin destino</span>}
-                    {r.notes && <span className="text-slate-400 font-normal ml-2">{r.notes}</span>}
+                  <td className="px-5 py-4 text-ink-2 font-semibold">
+                    {r.counterparty || <span className="text-ink-3 font-normal">Sin destino</span>}
+                    {r.notes && <span className="text-ink-3 font-normal ml-2">{r.notes}</span>}
                     {esMovimientoAutomatico(r.counterparty) && (
-                      <span className="block mt-1 text-[10px] uppercase font-black tracking-widest text-brand-blue-700">
+                      <span className="block mt-1 text-[10px] uppercase font-black tracking-widest text-state-info">
                         Automático · Acción Social
                       </span>
                     )}
                   </td>
-                  <td className="px-5 py-4 text-slate-500 font-medium">{r.operador}</td>
+                  <td className="px-5 py-4 text-ink-3 font-medium">{r.operador}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-slate-100 bg-white/60">
-          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-rule bg-paper-2">
+          <span className="text-xs font-semibold text-ink-3 uppercase tracking-wider">
             Mostrando {pagination?.total ? (page - 1) * PAGE_SIZE + 1 : 0}–
             {Math.min(page * PAGE_SIZE, pagination?.total ?? 0)} de {formatNumero(pagination?.total ?? 0)}
             {search || typeFilter !== 'all' ? ` · ${filteredRows.length} en pantalla tras filtrar` : ''}
@@ -289,15 +289,15 @@ export default function DistributionsPage() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1 || loading}
-              className="px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm font-bold text-slate-600 disabled:opacity-40 hover:bg-slate-50 transition"
+              className="px-3 py-2 rounded-lg border border-rule bg-paper text-sm font-bold text-ink-2 disabled:opacity-40 hover:bg-paper-3 transition"
             >
               Anterior
             </button>
-            <span className="text-sm font-bold text-slate-600 tabular-nums">{page} / {pagination?.totalPages ?? 1}</span>
+            <span className="text-sm font-bold text-ink-2 tabular-nums">{page} / {pagination?.totalPages ?? 1}</span>
             <button
               onClick={() => setPage((p) => Math.min(pagination?.totalPages ?? 1, p + 1))}
               disabled={page >= (pagination?.totalPages ?? 1) || loading}
-              className="px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm font-bold text-slate-600 disabled:opacity-40 hover:bg-slate-50 transition"
+              className="px-3 py-2 rounded-lg border border-rule bg-paper text-sm font-bold text-ink-2 disabled:opacity-40 hover:bg-paper-3 transition"
             >
               Siguiente
             </button>
@@ -316,27 +316,27 @@ export default function DistributionsPage() {
             <EmptyState icon="⏳" message="Cargando" sub="Leyendo detalle..." />
           ) : (
             <div className="space-y-4">
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="rounded-xl border border-rule bg-paper-2 p-4">
                 <div className="flex flex-wrap gap-3 justify-between">
                   <div>
-                    <div className="text-xs text-slate-500 uppercase tracking-wide">Tipo de Egreso</div>
-                    <div className="text-slate-900 font-semibold text-lg">
+                    <div className="text-xs text-ink-3 uppercase tracking-wide">Tipo de Egreso</div>
+                    <div className="text-ink font-semibold text-lg">
                       {detail.movement_type === 'delivery' ? 'Entrega (Asistencia)' : detail.movement_type === 'transfer_out' ? 'Transferencia / Pase' : detail.movement_type === 'waste' ? 'Descarte (Vencido/Roto)' : 'Ajuste de Stock'}
                     </div>
-                    <div className="text-sm text-slate-600">Destino: <b>{detail.counterparty}</b></div>
-                    {detail.notes && <div className="text-sm text-slate-600">Notas: <b>{detail.notes}</b></div>}
+                    <div className="text-sm text-ink-2">Destino: <b>{detail.counterparty}</b></div>
+                    {detail.notes && <div className="text-sm text-ink-2">Notas: <b>{detail.notes}</b></div>}
                   </div>
                   <div className="text-right">
-                    <div className="text-xs text-slate-500 uppercase tracking-wide">Fecha</div>
-                    <div className="text-slate-900 font-semibold">{formatFecha(detail.fecha)}</div>
-                    <div className="text-sm text-slate-600">Operador: <b>{detail.operador}</b></div>
+                    <div className="text-xs text-ink-3 uppercase tracking-wide">Fecha</div>
+                    <div className="text-ink font-semibold">{formatFecha(detail.fecha)}</div>
+                    <div className="text-sm text-ink-2">Operador: <b>{detail.operador}</b></div>
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center justify-between gap-3">
-                <div className="text-sm text-slate-600">
-                  Artículos: <b className="text-slate-900">{detail.items.length}</b>
+                <div className="text-sm text-ink-2">
+                  Artículos: <b className="text-ink">{detail.items.length}</b>
                 </div>
                 <button
                   onClick={async () => {
@@ -345,16 +345,16 @@ export default function DistributionsPage() {
                     // For now, keeping the old function call, but it might need adaptation.
                     mod.generateDistributionPDF(detail)
                   }}
-                  className="px-5 py-2.5 rounded-xl bg-brand-green-900 text-white font-bold tracking-wide hover:bg-brand-green-700 hover:shadow-md transition-all uppercase text-sm"
+                  className="px-5 py-2.5 rounded-xl bg-accent-strong text-white font-bold tracking-wide hover:brightness-110 hover:shadow-md transition-all uppercase text-sm"
                 >
                   Exportar PDF
                 </button>
               </div>
 
-              <div className="border border-slate-200 rounded-xl overflow-hidden">
+              <div className="border border-rule rounded-xl overflow-hidden">
                 <table className="min-w-full text-sm">
-                  <thead className="bg-white">
-                    <tr className="text-left text-slate-600">
+                  <thead className="bg-paper">
+                    <tr className="text-left text-ink-2">
                       <th className="px-3 py-2 font-semibold">Código</th>
                       <th className="px-3 py-2 font-semibold">Artículo</th>
                       <th className="px-3 py-2 font-semibold">Unidad</th>
@@ -363,11 +363,11 @@ export default function DistributionsPage() {
                   </thead>
                   <tbody>
                     {detail.items.map((it) => (
-                      <tr key={`${it.code}-${it.name}`} className="border-t border-slate-100">
-                        <td className="px-3 py-2 font-semibold text-brand-blue-700">{it.code}</td>
-                        <td className="px-3 py-2 text-slate-900">{it.name}</td>
-                        <td className="px-3 py-2 text-slate-700">{it.unit}</td>
-                        <td className="px-3 py-2 text-right font-semibold text-slate-900 tabular-nums">{formatNumero(it.quantity)}</td>
+                      <tr key={`${it.code}-${it.name}`} className="border-t border-rule">
+                        <td className="px-3 py-2 font-semibold text-state-info">{it.code}</td>
+                        <td className="px-3 py-2 text-ink">{it.name}</td>
+                        <td className="px-3 py-2 text-ink-2">{it.unit}</td>
+                        <td className="px-3 py-2 text-right font-semibold text-ink tabular-nums">{formatNumero(it.quantity)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -382,15 +382,15 @@ export default function DistributionsPage() {
         <Modal title="Registrar Egreso" onClose={() => setShowForm(false)} size="lg">
           <form onSubmit={handleCreate} className="space-y-6">
             
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-              <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide mb-3">1. Detalles del Egreso</h3>
+            <div className="p-4 bg-paper-2 border border-rule rounded-[--radius-card]">
+              <h3 className="text-sm font-bold text-ink-2 uppercase tracking-wide mb-3">1. Detalles del Egreso</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                  <label className="block">
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Tipo de Egreso</span>
+                    <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Tipo de Egreso</span>
                     <select
                       value={movementType}
                       onChange={e => setMovementType(e.target.value)}
-                      className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-brand-green-500 focus:border-brand-green-500 outline-none"
+                      className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:outline-focus focus:border-focus outline-none"
                     >
                       <option value="delivery">Entrega (Asistencia)</option>
                       <option value="transfer_out">Transferencia / Pase</option>
@@ -399,26 +399,26 @@ export default function DistributionsPage() {
                     </select>
                  </label>
                  <label className="block">
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Destino / Entidad</span>
+                    <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Destino / Entidad</span>
                     <input
                       required
                       value={destination}
                       onChange={e => setDestination(e.target.value)}
                       placeholder="Ej. Comedor, Persona, Área..."
-                      className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-brand-green-500 focus:border-brand-green-500 outline-none"
+                      className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:outline-focus focus:border-focus outline-none"
                     />
                  </label>
               </div>
             </div>
 
             {/* Items Selection */}
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-              <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide mb-3">2. Artículos a entregar</h3>
+            <div className="p-4 bg-paper-2 border border-rule rounded-[--radius-card]">
+              <h3 className="text-sm font-bold text-ink-2 uppercase tracking-wide mb-3">2. Artículos a entregar</h3>
               <div className="flex gap-2 mb-4">
                  <select
                    value={pendingItemId}
                    onChange={(event) => setPendingItemId(event.target.value)}
-                   className="flex-1 rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-brand-green-500 focus:border-brand-green-500 outline-none"
+                   className="flex-1 rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:outline-focus focus:border-focus outline-none"
                  >
                     <option value="">-- Seleccionar artículo --</option>
                     {availableItems.filter(i => !selectedItems.find(s => s.item_id === i.id)).map(i => (
@@ -435,26 +435,26 @@ export default function DistributionsPage() {
                       setPendingItemId('')
                     }
                   }}
-                  className="px-4 py-2 bg-slate-800 text-white rounded-xl font-bold uppercase tracking-wide text-xs hover:bg-slate-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-ink text-white rounded-xl font-bold uppercase tracking-wide text-xs hover:bg-ink-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
                  >
                    Añadir
                  </button>
               </div>
 
               {selectedItems.length > 0 && (
-                <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <div className="bg-paper rounded-xl border border-rule overflow-hidden">
                   <table className="w-full text-sm text-left">
-                    <thead className="bg-slate-100/50">
+                    <thead className="bg-paper-3">
                       <tr>
-                        <th className="px-3 py-2 font-bold text-slate-600">Artículo</th>
-                        <th className="px-3 py-2 font-bold text-slate-600 w-24">Cantidad</th>
+                        <th className="px-3 py-2 font-bold text-ink-2">Artículo</th>
+                        <th className="px-3 py-2 font-bold text-ink-2 w-24">Cantidad</th>
                         <th className="px-3 py-2"></th>
                       </tr>
                     </thead>
                     <tbody>
                       {selectedItems.map((sit, idx) => (
-                        <tr key={sit.item_id} className="border-t border-slate-100">
-                          <td className="px-3 py-2 font-semibold text-slate-800">{sit.name}</td>
+                        <tr key={sit.item_id} className="border-t border-rule">
+                          <td className="px-3 py-2 font-semibold text-ink">{sit.name}</td>
                           <td className="px-3 py-2">
                             <input 
                               type="number" min="1" required
@@ -464,7 +464,7 @@ export default function DistributionsPage() {
                                 newItems[idx].quantity = parseInt(e.target.value) || 1
                                 setSelectedItems(newItems)
                               }}
-                              className="w-full border border-slate-300 rounded px-2 py-1 outline-none text-center"
+                              className="w-full border border-rule rounded px-2 py-1 outline-none text-center"
                             />
                           </td>
                           <td className="px-3 py-2 text-right">
@@ -481,11 +481,11 @@ export default function DistributionsPage() {
             </div>
 
             <label className="block px-1">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Observaciones (Opcional)</span>
+              <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Observaciones (Opcional)</span>
               <input
                 value={observaciones}
                 onChange={e => setObservaciones(e.target.value)}
-                className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-brand-green-500 focus:border-brand-green-500 outline-none"
+                className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:outline-focus focus:border-focus outline-none"
                 placeholder="Motivo de la entrega o nota adicional..."
               />
             </label>
@@ -496,18 +496,18 @@ export default function DistributionsPage() {
                </div>
             )}
 
-            <div className="pt-4 flex justify-end gap-3 border-t border-slate-100 mt-2">
+            <div className="pt-4 flex justify-end gap-3 border-t border-rule mt-2">
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="px-4 py-2 rounded-xl text-slate-600 font-semibold hover:bg-slate-100 transition tracking-wide"
+                  className="px-4 py-2 rounded-xl text-ink-2 font-semibold hover:bg-paper-3 transition tracking-wide"
                 >
                   Cerrar
                 </button>
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="px-5 py-2 rounded-xl bg-brand-green-900 text-white font-bold tracking-widest disabled:opacity-50 hover:bg-brand-green-700 transition uppercase shadow-md"
+                  className="px-5 py-2 rounded-xl bg-accent-strong text-white font-bold tracking-widest disabled:opacity-50 hover:brightness-110 transition uppercase shadow-md"
                 >
                   {formLoading ? 'Registrando...' : 'Confirmar Egreso'}
                 </button>

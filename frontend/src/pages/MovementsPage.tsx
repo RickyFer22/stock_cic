@@ -124,19 +124,19 @@ export default function MovementsPage() {
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="font-display font-black text-brand-green-900 text-3xl uppercase tracking-wider">Movimientos</h1>
-          <p className="text-slate-600 mt-1 font-medium text-sm">Seguimiento de ingresos, egresos y ajustes de stock.</p>
+          <h1 className="font-display font-extrabold text-ink text-3xl uppercase tracking-wider">Movimientos</h1>
+          <p className="text-ink-2 mt-1 font-medium text-sm">Seguimiento de ingresos, egresos y ajustes de stock.</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={handleExport}
             disabled={downloading || total === 0}
-            className="px-4 py-2.5 rounded-xl bg-brand-green-900 text-white text-sm font-bold uppercase tracking-wider disabled:opacity-50 hover:bg-brand-green-800 transition"
+            className="px-4 py-2.5 rounded-xl bg-accent-strong text-white text-sm font-bold uppercase tracking-wider disabled:opacity-50 hover:brightness-110 transition"
           >
             {downloading ? 'Generando...' : 'Exportar Excel'}
           </button>
-          <div className="px-4 py-2.5 rounded-xl bg-white border-2 border-slate-200 shadow-sm text-sm text-slate-600 font-bold uppercase tracking-wider">
-            Total: <b className="text-brand-green-900 text-base">{total}</b>
+          <div className="px-4 py-2.5 rounded-xl bg-paper border-2 border-rule shadow-sm text-sm text-ink-2 font-bold uppercase tracking-wider">
+            Total: <b className="text-accent text-base">{total}</b>
           </div>
         </div>
       </div>
@@ -150,18 +150,18 @@ export default function MovementsPage() {
         ]}
       />
 
-      <div className="bg-white/80 backdrop-blur-md border border-white/60 rounded-2xl p-4 shadow-sm flex flex-col gap-3">
+      <div className="bg-paper-2 border border-rule rounded-[--radius-card] p-4 shadow-sm flex flex-col gap-3">
         <div className="flex flex-col md:flex-row gap-3 md:items-center">
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Buscar por código, artículo, operador, origen/destino o nota..."
-            className="w-full md:flex-1 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand-green-700"
+            className="w-full md:flex-1 rounded-xl border border-rule bg-paper px-4 py-2.5 text-sm outline-none focus:border-focus"
           />
           <select
             value={kindFilter}
             onChange={(event) => setKindFilter(event.target.value as KindFilter)}
-            className="w-full md:w-52 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold outline-none focus:border-brand-green-700"
+            className="w-full md:w-52 rounded-xl border border-rule bg-paper px-4 py-2.5 text-sm font-semibold outline-none focus:border-focus"
           >
             <option value="all">Todos los tipos</option>
             <option value="INGRESO">Ingresos</option>
@@ -170,37 +170,37 @@ export default function MovementsPage() {
           </select>
         </div>
         <div className="flex flex-col md:flex-row gap-3 md:items-center">
-          <label className="flex items-center gap-2 text-sm text-slate-600 font-semibold">
+          <label className="flex items-center gap-2 text-sm text-ink-2 font-semibold">
             Desde
             <input
               type="date"
               value={from}
               onChange={(event) => setFrom(event.target.value)}
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-green-700"
+              className="rounded-xl border border-rule bg-paper px-3 py-2 text-sm outline-none focus:border-focus"
             />
           </label>
-          <label className="flex items-center gap-2 text-sm text-slate-600 font-semibold">
+          <label className="flex items-center gap-2 text-sm text-ink-2 font-semibold">
             Hasta
             <input
               type="date"
               value={to}
               onChange={(event) => setTo(event.target.value)}
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-green-700"
+              className="rounded-xl border border-rule bg-paper px-3 py-2 text-sm outline-none focus:border-focus"
             />
           </label>
-          <label className="flex items-center gap-2 text-sm text-slate-600 font-semibold cursor-pointer">
+          <label className="flex items-center gap-2 text-sm text-ink-2 font-semibold cursor-pointer">
             <input
               type="checkbox"
               checked={soloAutomaticos}
               onChange={(event) => setSoloAutomaticos(event.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 accent-brand-green-700"
+              className="h-4 w-4 rounded border-rule accent-[--color-accent]"
             />
             Solo automáticos (Acción Social)
           </label>
           {(from || to || kindFilter !== 'all' || soloAutomaticos || search) && (
             <button
               onClick={() => { setFrom(''); setTo(''); setKindFilter('all'); setSoloAutomaticos(false); setSearch('') }}
-              className="md:ml-auto text-sm font-bold text-slate-500 hover:text-slate-700 underline underline-offset-2"
+              className="md:ml-auto text-sm font-bold text-ink-3 hover:text-ink underline underline-offset-2"
             >
               Limpiar filtros
             </button>
@@ -217,11 +217,11 @@ export default function MovementsPage() {
       ) : !visibleRows.length ? (
         <EmptyState message="Sin resultados" sub="Ajustá la búsqueda para ver movimientos de esta página." />
       ) : (
-        <div className="bg-white/80 backdrop-blur-md border border-white/60 rounded-[2rem] shadow-card overflow-hidden">
+        <div className="bg-paper-2 border border-rule rounded-[--radius-card] shadow-[--shadow-card] overflow-hidden">
           <div className="overflow-auto scrollbar-hide">
             <table className="min-w-full text-sm">
-              <thead className="bg-slate-100/50">
-                <tr className="text-left text-slate-500 uppercase tracking-wider text-xs">
+              <thead className="bg-paper-3">
+                <tr className="text-left text-ink-3 uppercase tracking-wider text-xs">
                   <th className="px-5 py-4 font-bold">Fecha</th>
                   <th className="px-5 py-4 font-bold">Tipo</th>
                   <th className="px-5 py-4 font-bold">Artículo</th>
@@ -233,48 +233,48 @@ export default function MovementsPage() {
               </thead>
               <tbody>
                 {visibleRows.map((r) => (
-                  <tr key={r.id} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
-                    <td className="px-5 py-4 whitespace-nowrap text-slate-600 font-medium tabular-nums">{formatFecha(r.fecha)}</td>
+                  <tr key={r.id} className="border-t border-rule hover:bg-paper-3 transition-colors">
+                    <td className="px-5 py-4 whitespace-nowrap text-ink-2 font-medium tabular-nums">{formatFecha(r.fecha)}</td>
                     <td className="px-5 py-4">
                       <span className={`inline-block px-2 py-1.5 rounded-lg text-[10px] uppercase font-black tracking-widest ${
-                        r.kind === 'INGRESO' ? 'bg-emerald-100 text-emerald-800' :
-                        r.kind === 'DISTRIBUTION' ? 'bg-rose-100 text-rose-800' :
-                        r.kind === 'ADJUSTMENT' ? 'bg-amber-100 text-amber-800' :
-                        'bg-slate-100 text-slate-800'
+                        r.kind === 'INGRESO' ? 'bg-state-ok-bg text-state-ok' :
+                        r.kind === 'DISTRIBUTION' ? 'bg-state-danger-bg text-state-danger' :
+                        r.kind === 'ADJUSTMENT' ? 'bg-state-warn-bg text-state-warn' :
+                        'bg-paper-3 text-ink'
                       }`}>
                         {r.kind === 'DISTRIBUTION' ? 'EGRESO' : r.kind}
                       </span>
                       {r.movement_type && (
-                        <span className="block mt-1 text-[11px] text-slate-500 font-semibold">
+                        <span className="block mt-1 text-[11px] text-ink-3 font-semibold">
                           {MOVEMENT_TYPE_LABEL[r.movement_type] || r.movement_type}
                         </span>
                       )}
                     </td>
                     <td className="px-5 py-4">
-                      <span className="block font-mono text-[11px] text-brand-blue-700 font-bold tracking-wide">{r.code}</span>
-                      <span className="block font-semibold text-slate-800">{r.item_name}</span>
+                      <span className="block font-mono text-[11px] text-state-info font-bold tracking-wide">{r.code}</span>
+                      <span className="block font-semibold text-ink">{r.item_name}</span>
                     </td>
-                    <td className={`px-5 py-4 text-right font-black text-base tabular-nums ${r.quantity > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    <td className={`px-5 py-4 text-right font-black text-base tabular-nums ${r.quantity > 0 ? 'text-state-ok' : 'text-state-danger'}`}>
                       {r.quantity > 0 ? '+' : ''}{r.quantity}
                     </td>
-                    <td className="px-5 py-4 text-slate-700 font-medium">
-                      {r.counterparty || <span className="text-slate-400">—</span>}
+                    <td className="px-5 py-4 text-ink-2 font-medium">
+                      {r.counterparty || <span className="text-ink-3">—</span>}
                       {esAutomatico(r) && (
-                        <span className="block mt-1 text-[10px] uppercase font-black tracking-widest text-brand-blue-700">
+                        <span className="block mt-1 text-[10px] uppercase font-black tracking-widest text-state-info">
                           Automático
                         </span>
                       )}
                     </td>
-                    <td className="px-5 py-4 text-slate-700 font-medium">{r.operador}</td>
-                    <td className="px-5 py-4 text-slate-500 max-w-[220px] truncate" title={r.notes || ''}>{r.notes || '—'}</td>
+                    <td className="px-5 py-4 text-ink-2 font-medium">{r.operador}</td>
+                    <td className="px-5 py-4 text-ink-3 max-w-[220px] truncate" title={r.notes || ''}>{r.notes || '—'}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-slate-100 bg-white/60">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-rule bg-paper-2">
+            <span className="text-xs font-semibold text-ink-3 uppercase tracking-wider">
               Mostrando {desde}–{hasta} de {total}
               {search || soloAutomaticos ? ` · ${visibleRows.length} en pantalla tras filtrar` : ''}
             </span>
@@ -282,15 +282,15 @@ export default function MovementsPage() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm font-bold text-slate-600 disabled:opacity-40 hover:bg-slate-50 transition"
+                className="px-3 py-2 rounded-lg border border-rule bg-paper text-sm font-bold text-ink-2 disabled:opacity-40 hover:bg-paper-3 transition"
               >
                 Anterior
               </button>
-              <span className="text-sm font-bold text-slate-600 tabular-nums">{page} / {totalPages}</span>
+              <span className="text-sm font-bold text-ink-2 tabular-nums">{page} / {totalPages}</span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm font-bold text-slate-600 disabled:opacity-40 hover:bg-slate-50 transition"
+                className="px-3 py-2 rounded-lg border border-rule bg-paper text-sm font-bold text-ink-2 disabled:opacity-40 hover:bg-paper-3 transition"
               >
                 Siguiente
               </button>

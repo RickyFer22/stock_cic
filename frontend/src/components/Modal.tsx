@@ -86,15 +86,15 @@ export default function Modal({ title, children, onClose, size = 'md', confirmar
         aria-modal="true"
         aria-labelledby={tituloId}
         tabIndex={-1}
-        className={`bg-white rounded-[2rem] shadow-2xl w-full ${widthClass} animate-fade-in flex flex-col max-h-[90vh] overflow-hidden border border-slate-100`}
+        className={`bg-white rounded-[2rem] shadow-2xl w-full ${widthClass} animate-fade-in flex flex-col max-h-[90vh] overflow-hidden border border-rule`}
       >
-        <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100 shrink-0 bg-slate-50">
-          <h2 id={tituloId} className="font-display font-black text-brand-green-900 text-xl uppercase tracking-wider">
+        <div className="flex items-center justify-between px-8 py-6 border-b border-rule shrink-0 bg-paper-2">
+          <h2 id={tituloId} className="font-display font-black text-accent text-xl uppercase tracking-wider">
             {title}
           </h2>
           <button
             onClick={intentarCerrar}
-            className="w-9 h-9 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors text-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-700"
+            className="w-9 h-9 flex items-center justify-center rounded-full text-ink-3 hover:bg-paper-3 hover:text-ink-2 transition-colors text-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             aria-label="Cerrar"
           >
             ✕

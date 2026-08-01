@@ -262,48 +262,48 @@ export default function ItemsPage({ role }: { role: string | null }) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="font-display font-black text-brand-green-900 text-3xl uppercase tracking-wider">Artículos</h1>
-          <p className="text-slate-600 mt-1 font-medium text-sm">Catálogo de artículos y stock actual.</p>
+          <h1 className="font-display font-extrabold text-ink text-3xl uppercase tracking-wider">Artículos</h1>
+          <p className="text-ink-2 mt-1 font-medium text-sm">Catálogo de artículos y stock actual.</p>
         </div>
       </div>
       {/* Acciones principales: orden claro (alta prioridad primero) */}
       <div className="flex flex-wrap items-center gap-3">
-        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1 hidden sm:inline">Acciones</span>
+        <span className="text-xs font-bold text-ink-3 uppercase tracking-wider mr-1 hidden sm:inline">Acciones</span>
         <button
           onClick={() => setShowForm(true)}
-          className="px-5 py-2.5 rounded-xl bg-brand-gold-500 text-brand-green-900 font-bold tracking-wide uppercase text-sm hover:brightness-110 shadow-md hover:shadow-lg transition-all"
+          className="px-5 py-2.5 rounded-xl bg-accent-strong text-accent-ink font-bold tracking-wide uppercase text-sm hover:brightness-110 shadow-md hover:shadow-lg transition-all"
         >
           + Nuevo ítem
         </button>
         <button
           onClick={() => setShowIngreso(true)}
-          className="px-5 py-2.5 rounded-xl bg-emerald-100 text-emerald-900 font-bold tracking-wide uppercase text-sm hover:brightness-110 shadow-md hover:shadow-lg transition-all"
+          className="px-5 py-2.5 rounded-xl bg-state-ok-bg text-state-ok font-bold tracking-wide uppercase text-sm hover:brightness-110 shadow-md hover:shadow-lg transition-all"
         >
           + Ingresar stock
         </button>
         <button
           onClick={() => setShowEgreso(true)}
-          className="px-5 py-2.5 rounded-xl bg-rose-100 text-rose-900 font-bold tracking-wide uppercase text-sm hover:brightness-110 shadow-md hover:shadow-lg transition-all"
+          className="px-5 py-2.5 rounded-xl bg-state-danger-bg text-state-danger font-bold tracking-wide uppercase text-sm hover:brightness-110 shadow-md hover:shadow-lg transition-all"
         >
           − Egresar stock
         </button>
-        <div className="w-px h-8 bg-slate-200 hidden sm:block" aria-hidden />
-        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1 hidden sm:inline">Reportes y datos</span>
+        <div className="w-px h-8 bg-rule hidden sm:block" aria-hidden />
+        <span className="text-xs font-bold text-ink-3 uppercase tracking-wider mr-1 hidden sm:inline">Reportes y datos</span>
         <button
           onClick={handleExportHealth}
           disabled={exporting !== null}
-          className="px-5 py-2.5 rounded-xl bg-white border-2 border-slate-200 shadow-sm font-bold tracking-wide text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all uppercase text-sm disabled:opacity-50"
+          className="px-5 py-2.5 rounded-xl bg-paper border-2 border-rule shadow-sm font-bold tracking-wide text-ink-2 hover:bg-paper-3 hover:border-rule-strong transition-all uppercase text-sm disabled:opacity-50"
         >
           {exporting === 'health' ? 'Generando…' : 'Reporte stock'}
         </button>
         <button
           onClick={handleExport}
           disabled={exporting !== null}
-          className="px-5 py-2.5 rounded-xl bg-white border-2 border-slate-200 shadow-sm font-bold tracking-wide text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all uppercase text-sm disabled:opacity-50"
+          className="px-5 py-2.5 rounded-xl bg-paper border-2 border-rule shadow-sm font-bold tracking-wide text-ink-2 hover:bg-paper-3 hover:border-rule-strong transition-all uppercase text-sm disabled:opacity-50"
         >
           {exporting === 'items' ? 'Generando…' : 'Exportar Excel'}
         </button>
-        <label className="px-5 py-2.5 rounded-xl bg-brand-green-900 text-white font-bold tracking-wide uppercase text-sm hover:bg-brand-green-700 transition-all shadow-md hover:shadow-lg cursor-pointer">
+        <label className="px-5 py-2.5 rounded-xl bg-accent-strong text-white font-bold tracking-wide uppercase text-sm hover:brightness-110 transition-all shadow-md hover:shadow-lg cursor-pointer">
           {importing ? 'Importando…' : 'Importar Excel'}
           <input
             type="file"
@@ -358,38 +358,38 @@ export default function ItemsPage({ role }: { role: string | null }) {
         ]}
       />
 
-      <div className="bg-white/80 backdrop-blur-md border border-white/60 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+      <div className="bg-paper-2 border border-rule rounded-[--radius-card] p-4 shadow-sm flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
         <input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Buscar por código, artículo, categoría o ubicación..."
-          className="w-full md:max-w-xl rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand-green-700"
+          className="w-full md:max-w-xl rounded-xl border border-rule bg-paper px-4 py-2.5 text-sm outline-none focus:border-focus"
         />
-        <div className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-sm font-bold uppercase tracking-wider">
-          Mostrando: <span className="text-brand-green-900 text-base">{filteredItems.length}</span>
+        <div className="px-4 py-2.5 rounded-xl bg-paper-3 text-ink-2 text-sm font-bold uppercase tracking-wider">
+          Mostrando: <span className="text-accent text-base">{filteredItems.length}</span>
         </div>
       </div>
 
       {/* KPIs de estado de stock */}
       {health && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <div className="rounded-2xl p-3 bg-slate-900 text-white shadow-md">
+          <div className="rounded-[--radius-card] p-3 bg-ink text-white shadow-md">
             <div className="text-xs uppercase tracking-widest font-bold opacity-80">Ítems Activos</div>
             <div className="text-2xl font-black mt-1">{health.total}</div>
           </div>
-          <div className="rounded-2xl p-3 bg-amber-50 border border-amber-100 text-amber-900 shadow-inner">
+          <div className="rounded-[--radius-card] p-3 bg-state-warn-bg border border-state-warn-bg text-state-warn shadow-inner">
             <div className="text-xs uppercase tracking-widest font-bold">Bajo Stock</div>
             <div className="text-2xl font-black mt-1">{health.lowStock}</div>
           </div>
-          <div className="rounded-2xl p-3 bg-rose-50 border border-rose-100 text-rose-900 shadow-inner">
+          <div className="rounded-[--radius-card] p-3 bg-state-danger-bg border border-state-danger-bg text-state-danger shadow-inner">
             <div className="text-xs uppercase tracking-widest font-bold">Sin Stock</div>
             <div className="text-2xl font-black mt-1">{health.outOfStock}</div>
           </div>
-          <div className="rounded-2xl p-3 bg-emerald-50 border border-emerald-100 text-emerald-900 shadow-inner">
+          <div className="rounded-[--radius-card] p-3 bg-state-ok-bg border border-state-ok-bg text-state-ok shadow-inner">
             <div className="text-xs uppercase tracking-widest font-bold">Sobre Stock</div>
             <div className="text-2xl font-black mt-1">{health.overStock}</div>
           </div>
-          <div className="rounded-2xl p-3 bg-indigo-50 border border-indigo-100 text-indigo-900 shadow-inner">
+          <div className="rounded-[--radius-card] p-3 bg-indigo-50 border border-indigo-100 text-indigo-900 shadow-inner">
             <div className="text-xs uppercase tracking-widest font-bold">Por Vencer (30 días)</div>
             <div className="text-2xl font-black mt-1">{health.expiringSoon}</div>
           </div>
@@ -397,14 +397,14 @@ export default function ItemsPage({ role }: { role: string | null }) {
       )}
 
       {importResult && (
-        <div className="bg-white/80 backdrop-blur-md border border-brand-green-200 rounded-[2rem] p-6 shadow-sm">
-          <h2 className="text-xl font-bold font-display text-brand-green-900 mb-2 tracking-wide uppercase">Resultado Importación</h2>
+        <div className="bg-paper-2 border border-accent/25 rounded-[--radius-card] p-6 shadow-sm">
+          <h2 className="text-xl font-bold font-display text-accent mb-2 tracking-wide uppercase">Resultado Importación</h2>
           <div className="flex gap-8 text-sm font-medium">
-             <div className="flex flex-col"><span className="text-slate-500 uppercase text-xs">Añadidos</span><span className="text-2xl font-black text-brand-green-600">{importResult.added}</span></div>
-             <div className="flex flex-col"><span className="text-slate-500 uppercase text-xs">Actualizados</span><span className="text-2xl font-black text-brand-gold-600">{importResult.updated}</span></div>
-             <div className="flex flex-col"><span className="text-slate-500 uppercase text-xs">Ignorados</span><span className="text-2xl font-black text-slate-400">{importResult.ignored}</span></div>
+             <div className="flex flex-col"><span className="text-ink-3 uppercase text-xs">Añadidos</span><span className="text-2xl font-black text-accent">{importResult.added}</span></div>
+             <div className="flex flex-col"><span className="text-ink-3 uppercase text-xs">Actualizados</span><span className="text-2xl font-black text-state-warn">{importResult.updated}</span></div>
+             <div className="flex flex-col"><span className="text-ink-3 uppercase text-xs">Ignorados</span><span className="text-2xl font-black text-ink-3">{importResult.ignored}</span></div>
           </div>
-          <button onClick={() => setImportResult(null)} className="mt-4 px-4 py-2 font-bold text-slate-500 border border-slate-300 rounded-xl hover:bg-slate-50 shadow-sm text-sm uppercase tracking-wide transition-all">
+          <button onClick={() => setImportResult(null)} className="mt-4 px-4 py-2 font-bold text-ink-3 border border-rule rounded-xl hover:bg-paper-3 shadow-sm text-sm uppercase tracking-wide transition-all">
             Cerrar detalle
           </button>
         </div>
@@ -415,11 +415,11 @@ export default function ItemsPage({ role }: { role: string | null }) {
       ) : !filteredItems.length ? (
         <EmptyState message="Sin resultados" sub="No hay artículos que coincidan con la búsqueda." />
       ) : (
-        <div className="bg-white/80 backdrop-blur-md border border-white/60 rounded-[2rem] shadow-card overflow-hidden">
+        <div className="bg-paper-2 border border-rule rounded-[--radius-card] shadow-[--shadow-card] overflow-hidden">
           <div className="overflow-auto scrollbar-hide">
             <table className="min-w-full text-sm">
-            <thead className="bg-slate-100/50">
-              <tr className="text-left text-slate-500 uppercase tracking-wider text-xs">
+            <thead className="bg-paper-3">
+              <tr className="text-left text-ink-3 uppercase tracking-wider text-xs">
                 <th className="px-5 py-4 font-bold">Código</th>
                 <th className="px-5 py-4 font-bold">Artículo</th>
                 <th className="px-5 py-4 font-bold">Categoría</th>
@@ -433,21 +433,21 @@ export default function ItemsPage({ role }: { role: string | null }) {
             </thead>
             <tbody>
               {filteredItems.map((it) => (
-                <tr key={it.id} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
-                  <td className="px-5 py-4 font-bold text-brand-gold-500">{it.code}</td>
-                  <td className="px-5 py-4 font-semibold text-slate-900">{it.name}</td>
-                  <td className="px-5 py-4 text-slate-600">{it.category || '-'}</td>
-                  <td className="px-5 py-4 text-slate-600 font-medium">{it.unit}</td>
-                  <td className="px-5 py-4 text-slate-600">{it.location || '-'}</td>
-                  <td className="px-5 py-4 text-slate-600">{it.expiry_date ? new Date(it.expiry_date).toLocaleDateString() : '-'}</td>
-                  <td className="px-5 py-4 text-right font-black text-brand-green-900 text-base tabular-nums">{formatNumero(it.stock_actual)}</td>
-                  <td className="px-5 py-4 text-right text-slate-500 font-semibold tabular-nums">{formatNumero(it.stock_minimo)}</td>
+                <tr key={it.id} className="border-t border-rule hover:bg-paper-3 transition-colors">
+                  <td className="px-5 py-4 font-bold text-accent">{it.code}</td>
+                  <td className="px-5 py-4 font-semibold text-ink">{it.name}</td>
+                  <td className="px-5 py-4 text-ink-2">{it.category || '-'}</td>
+                  <td className="px-5 py-4 text-ink-2 font-medium">{it.unit}</td>
+                  <td className="px-5 py-4 text-ink-2">{it.location || '-'}</td>
+                  <td className="px-5 py-4 text-ink-2">{it.expiry_date ? new Date(it.expiry_date).toLocaleDateString() : '-'}</td>
+                  <td className="px-5 py-4 text-right font-black text-accent text-base tabular-nums">{formatNumero(it.stock_actual)}</td>
+                  <td className="px-5 py-4 text-right text-ink-3 font-semibold tabular-nums">{formatNumero(it.stock_minimo)}</td>
                   {isAdminOrSupervisor && (
                     <td className="px-5 py-4 text-right">
                       {it.stock_actual === 0 && (
                         <button
                           onClick={() => setItemAEliminar(it)}
-                          className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                          className="p-1.5 text-state-danger hover:bg-state-danger-bg rounded-lg transition-colors"
                           title={`Eliminar ${it.code} — ${it.name}`}
                           aria-label={`Eliminar artículo ${it.code} ${it.name}`}
                         >
@@ -468,43 +468,43 @@ export default function ItemsPage({ role }: { role: string | null }) {
         <Modal title="Nuevo Ítem" onClose={() => setShowForm(false)} size="md">
           <form onSubmit={handleSubmit} className="space-y-4">
              <label className="block">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Código Único</span>
+                <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Código Único</span>
                 <input
                   readOnly
                   value={nextCode}
-                  className="mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-slate-600 font-mono font-bold cursor-not-allowed outline-none"
+                  className="mt-1 block w-full rounded-xl border border-rule bg-paper-2 px-4 py-2 text-ink-2 font-mono font-bold cursor-not-allowed outline-none"
                 />
-                <p className="text-[10px] text-slate-400 mt-1">Se genera automáticamente</p>
+                <p className="text-[10px] text-ink-3 mt-1">Se genera automáticamente</p>
              </label>
              <label className="block">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Nombre del Artículo</span>
+                <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Nombre del Artículo</span>
                 <input
                   required
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value.toUpperCase() })}
-                  className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-brand-green-500 focus:border-brand-green-500 outline-none"
+                  className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:outline-focus focus:border-focus outline-none"
                   placeholder="Ej: FIDEOS TALLARINES 500G"
                 />
              </label>
              <div className="grid grid-cols-2 gap-4">
                <label className="block">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Unidad</span>
+                  <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Unidad</span>
                   <input
                     required
                     value={formData.unit}
                     onChange={e => setFormData({ ...formData, unit: e.target.value })}
-                    className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-brand-green-500 focus:border-brand-green-500 outline-none"
+                    className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:outline-focus focus:border-focus outline-none"
                   />
                </label>
                <label className="block">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Stock Mínimo</span>
+                  <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Stock Mínimo</span>
                   <input
                     type="number"
                     min="0"
                     required
                     value={formData.stock_minimo}
                     onChange={e => setFormData({ ...formData, stock_minimo: parseInt(e.target.value) || 0 })}
-                    className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-brand-green-500 focus:border-brand-green-500 outline-none"
+                    className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:outline-focus focus:border-focus outline-none"
                   />
                </label>
              </div>
@@ -517,14 +517,14 @@ export default function ItemsPage({ role }: { role: string | null }) {
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="px-4 py-2 rounded-xl text-slate-600 font-semibold hover:bg-slate-100 transition"
+                  className="px-4 py-2 rounded-xl text-ink-2 font-semibold hover:bg-paper-3 transition"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="px-5 py-2 rounded-xl bg-brand-green-900 text-white font-bold disabled:opacity-50 hover:bg-brand-green-700 transition"
+                  className="px-5 py-2 rounded-xl bg-accent-strong text-white font-bold disabled:opacity-50 hover:brightness-110 transition"
                 >
                   {formLoading ? 'Guardando...' : 'Crear Ítem'}
                 </button>
@@ -537,12 +537,12 @@ export default function ItemsPage({ role }: { role: string | null }) {
         <Modal title="Ingresar Stock" onClose={() => setShowIngreso(false)} size="md">
           <form onSubmit={handleIngresoSubmit} className="space-y-4">
             <label className="block">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Artículo</span>
+              <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Artículo</span>
               <select
                 required
                 value={ingresoData.item_id}
                 onChange={e => setIngresoData({ ...ingresoData, item_id: e.target.value })}
-                className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:ring-focus focus:border-focus outline-none"
               >
                 <option value="" disabled>Seleccionar un artículo</option>
                 {items.map(it => (
@@ -551,31 +551,31 @@ export default function ItemsPage({ role }: { role: string | null }) {
               </select>
             </label>
             <label className="block">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Cantidad que ingresa</span>
+              <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Cantidad que ingresa</span>
               <input
                 type="number"
                 min="1"
                 required
                 value={ingresoData.quantity}
                 onChange={e => setIngresoData({ ...ingresoData, quantity: parseInt(e.target.value) || 1 })}
-                className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:ring-focus focus:border-focus outline-none"
               />
               {ingresoItem && ingresoData.quantity > 0 && (
-                <span className="mt-1.5 block text-xs font-semibold text-slate-500">
+                <span className="mt-1.5 block text-xs font-semibold text-ink-3">
                   Stock resultante:{' '}
-                  <b className="text-slate-700">{ingresoItem.stock_actual}</b>
+                  <b className="text-ink-2">{ingresoItem.stock_actual}</b>
                   {' → '}
-                  <b className="text-emerald-600">{ingresoItem.stock_actual + ingresoData.quantity}</b>
+                  <b className="text-state-ok">{ingresoItem.stock_actual + ingresoData.quantity}</b>
                 </span>
               )}
             </label>
             <label className="block">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Tipo de ingreso</span>
+              <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Tipo de ingreso</span>
               <select
                 required
                 value={ingresoData.movement_type}
                 onChange={e => setIngresoData({ ...ingresoData, movement_type: e.target.value as any })}
-                className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:ring-focus focus:border-focus outline-none"
               >
                 <option value="donation">Donación</option>
                 <option value="purchase">Compra</option>
@@ -584,13 +584,13 @@ export default function ItemsPage({ role }: { role: string | null }) {
               </select>
             </label>
             <label className="block">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Proveedor / Origen</span>
+              <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Proveedor / Origen</span>
               <input
                 required
                 list="proveedores-sugeridos"
                 value={ingresoData.provider}
                 onChange={e => setIngresoData({ ...ingresoData, provider: e.target.value })}
-                className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:ring-focus focus:border-focus outline-none"
                 placeholder="Ej: Ministerio de Desarrollo Social"
               />
               <datalist id="proveedores-sugeridos">
@@ -598,11 +598,11 @@ export default function ItemsPage({ role }: { role: string | null }) {
               </datalist>
             </label>
             <label className="block">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Remito / Observaciones</span>
+              <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Remito / Observaciones</span>
               <input
                 value={ingresoData.notes}
                 onChange={e => setIngresoData({ ...ingresoData, notes: e.target.value })}
-                className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:ring-focus focus:border-focus outline-none"
                 placeholder="Opcional: número de remito, detalle de la entrega"
               />
             </label>
@@ -617,14 +617,14 @@ export default function ItemsPage({ role }: { role: string | null }) {
               <button
                 type="button"
                 onClick={() => setShowIngreso(false)}
-                className="px-4 py-2 rounded-xl text-slate-600 font-semibold hover:bg-slate-100 transition"
+                className="px-4 py-2 rounded-xl text-ink-2 font-semibold hover:bg-paper-3 transition"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={ingresoLoading}
-                className="px-5 py-2 rounded-xl bg-emerald-600 text-white font-bold disabled:opacity-50 hover:bg-emerald-700 transition"
+                className="px-5 py-2 rounded-xl bg-state-ok text-white font-bold disabled:opacity-50 hover:bg-state-ok transition"
               >
                 {ingresoLoading ? 'Guardando...' : 'Guardar Ingreso'}
               </button>
@@ -637,12 +637,12 @@ export default function ItemsPage({ role }: { role: string | null }) {
         <Modal title="Egresar Stock" onClose={() => setShowEgreso(false)} size="md">
           <form onSubmit={handleEgresoSubmit} className="space-y-4">
             <label className="block">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Artículo</span>
+              <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Artículo</span>
               <select
                 required
                 value={egresoData.item_id}
                 onChange={e => setEgresoData({ ...egresoData, item_id: e.target.value })}
-                className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none"
+                className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:ring-focus focus:border-focus outline-none"
               >
                 <option value="" disabled>Seleccionar un artículo</option>
                 {items.map(it => (
@@ -651,23 +651,23 @@ export default function ItemsPage({ role }: { role: string | null }) {
               </select>
             </label>
             <label className="block">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Cantidad a egresar</span>
+              <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Cantidad a egresar</span>
               <input
                 type="number"
                 min="1"
                 required
                 value={egresoData.quantity}
                 onChange={e => setEgresoData({ ...egresoData, quantity: parseInt(e.target.value) || 1 })}
-                className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none"
+                className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:ring-focus focus:border-focus outline-none"
               />
             </label>
             <label className="block">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Tipo de egreso</span>
+              <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Tipo de egreso</span>
               <select
                 required
                 value={egresoData.movement_type}
                 onChange={e => setEgresoData({ ...egresoData, movement_type: e.target.value as any })}
-                className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none"
+                className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:ring-focus focus:border-focus outline-none"
               >
                 <option value="delivery">Entrega / Distribución</option>
                 <option value="transfer_out">Transferencia</option>
@@ -676,21 +676,21 @@ export default function ItemsPage({ role }: { role: string | null }) {
               </select>
             </label>
             <label className="block">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Destinatario / Destino</span>
+              <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Destinatario / Destino</span>
               <input
                 required
                 value={egresoData.destination}
                 onChange={e => setEgresoData({ ...egresoData, destination: e.target.value })}
-                className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none"
+                className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:ring-focus focus:border-focus outline-none"
                 placeholder="Ej: Beneficiario, Área, etc."
               />
             </label>
             <label className="block">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Observaciones</span>
+              <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Observaciones</span>
               <input
                 value={egresoData.notes}
                 onChange={e => setEgresoData({ ...egresoData, notes: e.target.value })}
-                className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none"
+                className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:ring-focus focus:border-focus outline-none"
               />
             </label>
             
@@ -704,14 +704,14 @@ export default function ItemsPage({ role }: { role: string | null }) {
               <button
                 type="button"
                 onClick={() => setShowEgreso(false)}
-                className="px-4 py-2 rounded-xl text-slate-600 font-semibold hover:bg-slate-100 transition"
+                className="px-4 py-2 rounded-xl text-ink-2 font-semibold hover:bg-paper-3 transition"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={egresoLoading}
-                className="px-5 py-2 rounded-xl bg-rose-600 text-white font-bold disabled:opacity-50 hover:bg-rose-700 transition"
+                className="px-5 py-2 rounded-xl bg-state-danger text-white font-bold disabled:opacity-50 hover:bg-state-danger transition"
               >
                 {egresoLoading ? 'Guardando...' : 'Guardar Egreso'}
               </button>

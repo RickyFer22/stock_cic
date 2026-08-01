@@ -200,21 +200,21 @@ export default function App() {
           separado de lo administrativo y de las utilidades transversales. Antes
           eran cinco pestañas planas en orden historico, sin jerarquia. */}
       <nav aria-label="Navegación principal" className="hidden md:flex mb-6 flex-wrap items-center gap-x-3 gap-y-2">
-        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-1">Operación</span>
+        <span className="text-[10px] font-black uppercase tracking-widest text-ink-3 mr-1">Operación</span>
         <NavButton label="Egresos" active={tab === 'distributions'} onClick={() => setTab('distributions')} />
         <NavButton label="Articulos" active={tab === 'items'} onClick={() => setTab('items')} />
         <NavButton label="Movimientos" active={tab === 'movements'} onClick={() => setTab('movements')} />
 
         {canOpenSupervisor && (
           <>
-            <span className="w-px h-7 bg-slate-200 mx-1" aria-hidden="true" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-1">Administración</span>
+            <span className="w-px h-7 bg-rule mx-1" aria-hidden="true" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-ink-3 mr-1">Administración</span>
             <NavButton label="Supervisor" active={tab === 'supervisor'} tone="amber" onClick={() => setTab('supervisor')} />
           </>
         )}
 
-        <span className="w-px h-7 bg-slate-200 mx-1" aria-hidden="true" />
-        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-1">Ayuda</span>
+        <span className="w-px h-7 bg-rule mx-1" aria-hidden="true" />
+        <span className="text-[10px] font-black uppercase tracking-widest text-ink-3 mr-1">Ayuda</span>
         <NavButton label="Soporte" active={tab === 'soporte'} onClick={() => setTab('soporte')} />
       </nav>
 
@@ -226,7 +226,7 @@ export default function App() {
 
       <nav
         aria-label="Navegación principal"
-        className="fixed md:hidden bottom-0 inset-x-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]"
+        className="fixed md:hidden bottom-0 inset-x-0 z-40 border-t border-rule bg-paper/95 px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]"
       >
         <div className={`grid gap-1.5 ${canOpenSupervisor ? 'grid-cols-5' : 'grid-cols-4'}`}>
           {([
@@ -245,8 +245,8 @@ export default function App() {
                 aria-current={active ? 'page' : undefined}
                 className={`rounded-xl px-1 py-2 text-[10.5px] font-bold uppercase tracking-wide truncate ${
                   active
-                    ? amber ? 'bg-amber-600 text-white' : 'bg-brand-green-900 text-white'
-                    : amber ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600'
+                    ? amber ? 'bg-state-warn text-white' : 'bg-accent-strong text-white'
+                    : amber ? 'bg-state-warn-bg text-state-warn' : 'bg-paper-3 text-ink-2'
                 }`}
               >
                 {label}

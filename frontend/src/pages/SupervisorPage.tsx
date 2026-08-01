@@ -146,8 +146,8 @@ export default function SupervisorPage({ role }: { role: 'admin' | 'supervisor' 
     <div className="space-y-8 animate-fade-in pb-12">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="font-display font-black text-brand-green-900 text-3xl uppercase tracking-wider">Panel de Supervisor</h1>
-          <p className="text-slate-600 mt-1 font-medium text-sm">Control de acceso de usuarios y métricas del sistema.</p>
+          <h1 className="font-display font-extrabold text-ink text-3xl uppercase tracking-wider">Panel de Supervisor</h1>
+          <p className="text-ink-2 mt-1 font-medium text-sm">Control de acceso de usuarios y métricas del sistema.</p>
         </div>
         {isAdmin && (
           <button
@@ -155,7 +155,7 @@ export default function SupervisorPage({ role }: { role: 'admin' | 'supervisor' 
               setUserFormData({ role: 'operador', is_active: true, full_name: '', username: '', email: '' })
               setShowUserForm(true)
             }}
-            className="px-5 py-2.5 rounded-xl bg-brand-gold-500 text-brand-green-900 font-bold tracking-wide uppercase text-sm hover:brightness-110 shadow-md transition-all self-start sm:self-auto"
+            className="px-5 py-2.5 rounded-xl bg-accent-strong text-accent-ink font-bold tracking-wide uppercase text-sm hover:brightness-110 shadow-md transition-all self-start sm:self-auto"
           >
             + Nuevo Usuario
           </button>
@@ -170,40 +170,41 @@ export default function SupervisorPage({ role }: { role: 'admin' | 'supervisor' 
         ]}
       />
 
-      {/* Métricas principales */}
+      {/* Métricas principales. Antes eran seis tarjetas con seis degradados
+          distintos (esmeralda, ámbar, rosa, azul, violeta, cian): el color no
+          codificaba nada, solo distinguía una tarjeta de la de al lado. Ahora el
+          color aparece únicamente donde significa algo —stock bajo y sin stock
+          son los dos únicos números que piden una acción— y el resto queda
+          neutro. Ese contraste es lo que hace que las alertas se vean. */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-4 text-white shadow-lg">
-          <div className="text-3xl font-black">{dashboard?.totalItems || 0}</div>
-          <div className="text-xs uppercase tracking-wider font-bold opacity-90">Total Items</div>
-        </div>
-        <div className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl p-4 text-white shadow-lg">
-          <div className="text-3xl font-black">{health?.lowStock || 0}</div>
-          <div className="text-xs uppercase tracking-wider font-bold opacity-90">Stock Bajo</div>
-        </div>
-        <div className="bg-gradient-to-br from-rose-500 to-pink-500 rounded-2xl p-4 text-white shadow-lg">
-          <div className="text-3xl font-black">{health?.outOfStock || 0}</div>
-          <div className="text-xs uppercase tracking-wider font-bold opacity-90">Sin Stock</div>
-        </div>
-        <div className="bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl p-4 text-white shadow-lg">
-          <div className="text-3xl font-black">{dashboard?.totalBeneficiaries || 0}</div>
-          <div className="text-xs uppercase tracking-wider font-bold opacity-90">Beneficiarios</div>
-        </div>
-        <div className="bg-gradient-to-br from-violet-500 to-purple-500 rounded-2xl p-4 text-white shadow-lg">
-          <div className="text-3xl font-black">{dashboard?.monthlyMovements || 0}</div>
-          <div className="text-xs uppercase tracking-wider font-bold opacity-90">Movimientos Mes</div>
-        </div>
-        <div className="bg-gradient-to-br from-cyan-500 to-teal-500 rounded-2xl p-4 text-white shadow-lg">
-          <div className="text-3xl font-black">{dashboard?.weeklyMovements || 0}</div>
-          <div className="text-xs uppercase tracking-wider font-bold opacity-90">Esta Semana</div>
-        </div>
+        {([
+          { n: dashboard?.totalItems, l: 'Total items', tono: 'neutro' },
+          { n: health?.lowStock, l: 'Stock bajo', tono: 'warn' },
+          { n: health?.outOfStock, l: 'Sin stock', tono: 'danger' },
+          { n: dashboard?.totalBeneficiaries, l: 'Beneficiarios', tono: 'neutro' },
+          { n: dashboard?.monthlyMovements, l: 'Movimientos mes', tono: 'neutro' },
+          { n: dashboard?.weeklyMovements, l: 'Esta semana', tono: 'neutro' },
+        ] as const).map(({ n, l, tono }) => {
+          const activa = tono !== 'neutro' && (n || 0) > 0
+          const clase =
+            !activa ? 'bg-paper-2 border-rule text-ink'
+            : tono === 'warn' ? 'bg-state-warn-bg border-state-warn/40 text-state-warn'
+            : 'bg-state-danger-bg border-state-danger/40 text-state-danger'
+          return (
+            <div key={l} className={`rounded-[--radius-card] border p-4 shadow-[--shadow-card] ${clase}`}>
+              <div className="text-3xl font-black tabular-nums">{n || 0}</div>
+              <div className="text-[length:--text-xs] uppercase tracking-wider font-bold mt-0.5">{l}</div>
+            </div>
+          )
+        })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Gráfico 1: Stock por Categoría */}
-        <div className="bg-white/80 backdrop-blur-md border border-white/60 rounded-[2rem] p-6 shadow-card flex flex-col">
-          <h2 className="text-lg font-bold font-display text-brand-green-900 tracking-wide uppercase mb-4">Stock por Categoría</h2>
+        <div className="bg-paper-2 border border-rule rounded-[--radius-card] p-6 shadow-[--shadow-card] flex flex-col">
+          <h2 className="text-lg font-bold font-display text-accent tracking-wide uppercase mb-4">Stock por Categoría</h2>
           {!catStats.length ? (
-            <div className="my-auto text-center text-slate-400 font-medium py-8">No hay datos de stock.</div>
+            <div className="my-auto text-center text-ink-3 font-medium py-8">No hay datos de stock.</div>
           ) : (
             <div className="space-y-4 flex-1">
               {catStats.slice(0, 5).map((stat) => {
@@ -211,12 +212,12 @@ export default function SupervisorPage({ role }: { role: 'admin' | 'supervisor' 
                 return (
                   <div key={stat.category} className="group">
                     <div className="flex justify-between text-sm mb-1 font-medium">
-                      <span className="text-slate-700">{stat.category}</span>
-                      <span className="text-brand-green-800 font-bold">{stat.stock_total} u.</span>
+                      <span className="text-ink-2">{stat.category}</span>
+                      <span className="text-accent font-bold">{stat.stock_total} u.</span>
                     </div>
-                    <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                    <div className="w-full bg-paper-3 rounded-full h-2.5 overflow-hidden">
                       <div 
-                        className="bg-brand-green-500 h-2.5 rounded-full transition-all duration-1000 ease-out flex items-center shadow-inner group-hover:bg-brand-gold-400" 
+                        className="bg-accent h-2.5 rounded-full transition-all duration-1000 ease-out flex items-center shadow-inner group-hover:bg-accent-strong" 
                         style={{ width: `${perc}%` }}
                       ></div>
                     </div>
@@ -228,24 +229,24 @@ export default function SupervisorPage({ role }: { role: 'admin' | 'supervisor' 
         </div>
 
         {/* Métrica 2: Resumen del Mes */}
-        <div className="bg-white/80 backdrop-blur-md border border-white/60 rounded-[2rem] p-6 shadow-card flex flex-col justify-between">
-          <h2 className="text-lg font-bold font-display text-brand-green-900 tracking-wide uppercase mb-1">Actividad Últimos 30 días</h2>
-          <p className="text-slate-500 text-xs font-medium mb-6">Resumen de ingresos y egresos registrados</p>
+        <div className="bg-paper-2 border border-rule rounded-[--radius-card] p-6 shadow-[--shadow-card] flex flex-col justify-between">
+          <h2 className="text-lg font-bold font-display text-accent tracking-wide uppercase mb-1">Actividad Últimos 30 días</h2>
+          <p className="text-ink-3 text-xs font-medium mb-6">Resumen de ingresos y egresos registrados</p>
           
           <div className="grid grid-cols-2 gap-4 flex-1">
-            <div className="bg-emerald-50 rounded-2xl p-4 flex flex-col justify-center items-center text-center shadow-inner border border-emerald-100">
+            <div className="bg-state-ok-bg rounded-[--radius-card] p-4 flex flex-col justify-center items-center text-center shadow-inner border border-state-ok-bg">
               <span className="text-4xl">📦</span>
-              <span className="text-3xl font-black text-emerald-600 mt-2">
+              <span className="text-3xl font-black text-state-ok mt-2">
                 {movStats.reduce((acc, curr) => acc + Number(curr.inbound), 0)}
               </span>
-              <span className="text-xs text-emerald-800 uppercase tracking-widest font-bold mt-1">Total Ingresos</span>
+              <span className="text-xs text-state-ok uppercase tracking-widest font-bold mt-1">Total Ingresos</span>
             </div>
-            <div className="bg-rose-50 rounded-2xl p-4 flex flex-col justify-center items-center text-center shadow-inner border border-rose-100">
+            <div className="bg-state-danger-bg rounded-[--radius-card] p-4 flex flex-col justify-center items-center text-center shadow-inner border border-state-danger-bg">
               <span className="text-4xl">🚚</span>
-              <span className="text-3xl font-black text-rose-600 mt-2">
+              <span className="text-3xl font-black text-state-danger mt-2">
                 {movStats.reduce((acc, curr) => acc + Number(curr.outbound), 0)}
               </span>
-              <span className="text-xs text-rose-800 uppercase tracking-widest font-bold mt-1">Total Egresos</span>
+              <span className="text-xs text-state-danger uppercase tracking-widest font-bold mt-1">Total Egresos</span>
             </div>
           </div>
         </div>
@@ -254,67 +255,67 @@ export default function SupervisorPage({ role }: { role: 'admin' | 'supervisor' 
       {/* Alertas de inventario */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Items con stock bajo */}
-        <div className="bg-white/80 backdrop-blur-md border border-white/60 rounded-[2rem] p-6 shadow-card">
+        <div className="bg-paper-2 border border-rule rounded-[--radius-card] p-6 shadow-[--shadow-card]">
           <div className="flex items-center gap-3 mb-4">
             <span className="text-2xl">⚠️</span>
-            <h2 className="text-lg font-bold font-display text-brand-green-900 tracking-wide uppercase">Items con Stock Bajo</h2>
+            <h2 className="text-lg font-bold font-display text-accent tracking-wide uppercase">Items con Stock Bajo</h2>
           </div>
           {health?.itemsLowStock && health.itemsLowStock.length > 0 ? (
             <div className="space-y-3">
               {health.itemsLowStock.slice(0, 5).map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-100">
+                <div key={item.id} className="flex items-center justify-between p-3 bg-state-warn-bg rounded-xl border border-state-warn-bg">
                   <div>
-                    <div className="font-bold text-slate-700 text-sm">{item.name}</div>
-                    <div className="text-xs text-slate-500">{item.code} • {item.category}</div>
+                    <div className="font-bold text-ink-2 text-sm">{item.name}</div>
+                    <div className="text-xs text-ink-3">{item.code} • {item.category}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-black text-amber-600">{item.stock_actual}</div>
-                    <div className="text-xs text-slate-500">mín: {item.stock_minimo}</div>
+                    <div className="text-lg font-black text-state-warn">{item.stock_actual}</div>
+                    <div className="text-xs text-ink-3">mín: {item.stock_minimo}</div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center text-emerald-600 py-6 font-medium">✓ Sin items con stock bajo</div>
+            <div className="text-center text-state-ok py-6 font-medium">✓ Sin items con stock bajo</div>
           )}
         </div>
 
         {/* Items por vencer */}
-        <div className="bg-white/80 backdrop-blur-md border border-white/60 rounded-[2rem] p-6 shadow-card">
+        <div className="bg-paper-2 border border-rule rounded-[--radius-card] p-6 shadow-[--shadow-card]">
           <div className="flex items-center gap-3 mb-4">
             <span className="text-2xl">📅</span>
-            <h2 className="text-lg font-bold font-display text-brand-green-900 tracking-wide uppercase">Items por Vencer (30 días)</h2>
+            <h2 className="text-lg font-bold font-display text-accent tracking-wide uppercase">Items por Vencer (30 días)</h2>
           </div>
           {health?.itemsExpiring && health.itemsExpiring.length > 0 ? (
             <div className="space-y-3">
               {health.itemsExpiring.slice(0, 5).map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-3 bg-rose-50 rounded-xl border border-rose-100">
+                <div key={item.id} className="flex items-center justify-between p-3 bg-state-danger-bg rounded-xl border border-state-danger-bg">
                   <div>
-                    <div className="font-bold text-slate-700 text-sm">{item.name}</div>
-                    <div className="text-xs text-slate-500">{item.code}</div>
+                    <div className="font-bold text-ink-2 text-sm">{item.name}</div>
+                    <div className="text-xs text-ink-3">{item.code}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-black text-rose-600">{item.stock_actual}</div>
-                    <div className="text-xs text-rose-600 font-bold">{new Date(item.expiry_date).toLocaleDateString('es-AR')}</div>
+                    <div className="text-lg font-black text-state-danger">{item.stock_actual}</div>
+                    <div className="text-xs text-state-danger font-bold">{new Date(item.expiry_date).toLocaleDateString('es-AR')}</div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center text-emerald-600 py-6 font-medium">✓ Sin items por vencer</div>
+            <div className="text-center text-state-ok py-6 font-medium">✓ Sin items por vencer</div>
           )}
         </div>
       </div>
 
       {/* Movimientos recientes */}
-      <div className="bg-white/80 backdrop-blur-md border border-white/60 rounded-[2rem] shadow-card overflow-hidden">
-        <div className="px-6 py-5 border-b border-slate-100">
-          <h2 className="text-lg font-bold font-display text-brand-green-900 tracking-wide uppercase">Movimientos Recientes</h2>
+      <div className="bg-paper-2 border border-rule rounded-[--radius-card] shadow-[--shadow-card] overflow-hidden">
+        <div className="px-6 py-5 border-b border-rule">
+          <h2 className="text-lg font-bold font-display text-accent tracking-wide uppercase">Movimientos Recientes</h2>
         </div>
         <div className="overflow-auto">
           <table className="min-w-full text-sm">
-            <thead className="bg-slate-50/50">
-              <tr className="text-left text-slate-500 uppercase tracking-wider text-xs">
+            <thead className="bg-paper-2/50">
+              <tr className="text-left text-ink-3 uppercase tracking-wider text-xs">
                 <th className="px-5 py-4 font-bold">Fecha</th>
                 <th className="px-5 py-4 font-bold">Tipo</th>
                 <th className="px-5 py-4 font-bold">Item</th>
@@ -322,30 +323,30 @@ export default function SupervisorPage({ role }: { role: 'admin' | 'supervisor' 
                 <th className="px-5 py-4 font-bold">Operador</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-rule">
               {dashboard?.recentMovements && dashboard.recentMovements.length > 0 ? (
                 dashboard.recentMovements.map(m => (
-                  <tr key={m.id} className="hover:bg-slate-50/50">
-                    <td className="px-5 py-3 text-slate-600 font-medium">{formatDate(m.fecha)}</td>
+                  <tr key={m.id} className="hover:bg-paper-3/50">
+                    <td className="px-5 py-3 text-ink-2 font-medium">{formatDate(m.fecha)}</td>
                     <td className="px-5 py-3">
                       <span className={`px-2 py-1 rounded-md text-xs font-bold uppercase ${
-                        m.kind === 'INGRESO' ? 'bg-emerald-100 text-emerald-700' :
-                        m.kind === 'DISTRIBUTION' ? 'bg-rose-100 text-rose-700' :
-                        'bg-blue-100 text-blue-700'
+                        m.kind === 'INGRESO' ? 'bg-state-ok-bg text-state-ok' :
+                        m.kind === 'DISTRIBUTION' ? 'bg-state-danger-bg text-state-danger' :
+                        'bg-state-info-bg text-state-info'
                       }`}>
                         {m.kind}
                       </span>
                     </td>
-                    <td className="px-5 py-3 font-medium text-slate-700">{m.item_name}</td>
-                    <td className={`px-5 py-3 font-bold ${m.quantity > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    <td className="px-5 py-3 font-medium text-ink-2">{m.item_name}</td>
+                    <td className={`px-5 py-3 font-bold ${m.quantity > 0 ? 'text-state-ok' : 'text-state-danger'}`}>
                       {m.quantity > 0 ? '+' : ''}{m.quantity}
                     </td>
-                    <td className="px-5 py-3 text-slate-600">{m.operador}</td>
+                    <td className="px-5 py-3 text-ink-2">{m.operador}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-5 py-8 text-center text-slate-400">Sin movimientos recientes</td>
+                  <td colSpan={5} className="px-5 py-8 text-center text-ink-3">Sin movimientos recientes</td>
                 </tr>
               )}
             </tbody>
@@ -355,15 +356,15 @@ export default function SupervisorPage({ role }: { role: 'admin' | 'supervisor' 
 
       {/* Control de Usuarios */}
       {isAdmin ? (
-        <div className="bg-white/80 backdrop-blur-md border border-white/60 rounded-[2rem] shadow-card overflow-hidden">
-          <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-            <h2 className="text-lg font-bold font-display text-brand-green-900 tracking-wide uppercase">Control de Usuarios</h2>
-            <span className="bg-slate-100 text-slate-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">{users.length} Registros</span>
+        <div className="bg-paper-2 border border-rule rounded-[--radius-card] shadow-[--shadow-card] overflow-hidden">
+          <div className="px-6 py-5 border-b border-rule flex items-center justify-between">
+            <h2 className="text-lg font-bold font-display text-accent tracking-wide uppercase">Control de Usuarios</h2>
+            <span className="bg-paper-3 text-ink-2 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">{users.length} Registros</span>
           </div>
           <div className="overflow-auto scrollbar-hide">
             <table className="min-w-full text-sm">
-              <thead className="bg-slate-50/50">
-                <tr className="text-left text-slate-500 uppercase tracking-wider text-xs">
+              <thead className="bg-paper-2/50">
+                <tr className="text-left text-ink-3 uppercase tracking-wider text-xs">
                   <th className="px-5 py-4 font-bold">Usuario</th>
                   <th className="px-5 py-4 font-bold">Nombre Completo</th>
                   <th className="px-5 py-4 font-bold">Rol</th>
@@ -371,25 +372,25 @@ export default function SupervisorPage({ role }: { role: 'admin' | 'supervisor' 
                   <th className="px-5 py-4 font-bold text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-rule">
                 {users.map(u => (
-                  <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-5 py-4 font-bold text-brand-green-900">{u.username}</td>
-                    <td className="px-5 py-4 text-slate-700">{u.full_name}</td>
+                  <tr key={u.id} className="hover:bg-paper-3/50 transition-colors">
+                    <td className="px-5 py-4 font-bold text-accent">{u.username}</td>
+                    <td className="px-5 py-4 text-ink-2">{u.full_name}</td>
                     <td className="px-5 py-4">
                       <span className={`px-2.5 py-1 rounded-md text-xs font-bold tracking-widest uppercase items-center ${
-                        u.role === 'admin' ? 'bg-rose-100 text-rose-700' :
-                        u.role === 'supervisor' ? 'bg-amber-100 text-amber-700' :
-                        'bg-slate-100 text-slate-600'
+                        u.role === 'admin' ? 'bg-state-danger-bg text-state-danger' :
+                        u.role === 'supervisor' ? 'bg-state-warn-bg text-state-warn' :
+                        'bg-paper-3 text-ink-2'
                       }`}>
                         {u.role}
                       </span>
                     </td>
                     <td className="px-5 py-4">
                       {u.is_active ? (
-                        <span className="text-emerald-600 font-bold bg-emerald-50 px-2 py-1 flex items-center w-max rounded-md text-xs uppercase tracking-wider"><span className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>Activo</span>
+                        <span className="text-state-ok font-bold bg-state-ok-bg px-2 py-1 flex items-center w-max rounded-md text-xs uppercase tracking-wider"><span className="w-2 h-2 rounded-full bg-state-ok-bg0 mr-2"></span>Activo</span>
                       ) : (
-                        <span className="text-rose-600 font-bold bg-rose-50 px-2 py-1 flex items-center w-max rounded-md text-xs uppercase tracking-wider"><span className="w-2 h-2 rounded-full bg-rose-500 mr-2"></span>Inactivo</span>
+                        <span className="text-state-danger font-bold bg-state-danger-bg px-2 py-1 flex items-center w-max rounded-md text-xs uppercase tracking-wider"><span className="w-2 h-2 rounded-full bg-state-danger-bg0 mr-2"></span>Inactivo</span>
                       )}
                     </td>
                     <td className="px-5 py-4 text-right">
@@ -398,7 +399,7 @@ export default function SupervisorPage({ role }: { role: 'admin' | 'supervisor' 
                           setUserFormData({ ...u, password: '' })
                           setShowUserForm(true)
                         }}
-                        className="text-brand-green-600 hover:text-brand-green-800 font-bold text-xs uppercase tracking-widest border border-brand-green-200 px-3 py-1.5 rounded-lg hover:bg-brand-green-50 transition-all"
+                        className="text-accent hover:text-accent font-bold text-xs uppercase tracking-widest border border-accent/25 px-3 py-1.5 rounded-lg hover:bg-accent-soft transition-all"
                       >
                         Editar
                       </button>
@@ -410,7 +411,7 @@ export default function SupervisorPage({ role }: { role: 'admin' | 'supervisor' 
           </div>
         </div>
       ) : (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 font-medium">
+        <div className="rounded-[--radius-card] border border-state-warn/25 bg-state-warn-bg px-4 py-3 text-sm text-state-warn font-medium">
           Gestion de usuarios disponible solo para rol admin.
         </div>
       )}
@@ -418,56 +419,56 @@ export default function SupervisorPage({ role }: { role: 'admin' | 'supervisor' 
       {showUserForm && (
         <Modal title={userFormData.id ? "Editar Usuario" : "Nuevo Usuario"} onClose={() => setShowUserForm(false)}>
           <form onSubmit={handleSaveUser} className="space-y-4">
-            {formError && <div className="text-rose-600 text-sm font-bold bg-rose-50 p-3 rounded-xl border border-rose-100">{formError}</div>}
+            {formError && <div className="text-state-danger text-sm font-bold bg-state-danger-bg p-3 rounded-xl border border-state-danger-bg">{formError}</div>}
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Usuario (Login)</label>
+                <label className="block text-xs font-bold text-ink-3 uppercase tracking-wider mb-2">Usuario (Login)</label>
                 <input 
                   autoFocus
                   required
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-brand-green-600 focus:ring-2 focus:ring-brand-green-100 transition-all font-medium text-slate-700"
+                  className="w-full bg-paper-2 border border-rule rounded-xl px-4 py-2.5 outline-none focus:border-accent focus:ring-2 focus:ring-focus/30 transition-all font-medium text-ink-2"
                   value={userFormData.username || ''}
                   onChange={e => setUserFormData({...userFormData, username: e.target.value})}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Contraseña</label>
+                <label className="block text-xs font-bold text-ink-3 uppercase tracking-wider mb-2">Contraseña</label>
                 <input 
                   type="password"
                   placeholder={userFormData.id ? "(Dejar vacío para no cambiar)" : "Requerida"}
                   required={!userFormData.id}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-brand-green-600 focus:ring-2 focus:ring-brand-green-100 transition-all font-medium text-slate-700"
+                  className="w-full bg-paper-2 border border-rule rounded-xl px-4 py-2.5 outline-none focus:border-accent focus:ring-2 focus:ring-focus/30 transition-all font-medium text-ink-2"
                   value={userFormData.password || ''}
                   onChange={e => setUserFormData({...userFormData, password: e.target.value})}
                 />
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre Completo</label>
+                <label className="block text-xs font-bold text-ink-3 uppercase tracking-wider mb-2">Nombre Completo</label>
                 <input 
                   required
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-brand-green-600 focus:ring-2 focus:ring-brand-green-100 transition-all font-medium text-slate-700"
+                  className="w-full bg-paper-2 border border-rule rounded-xl px-4 py-2.5 outline-none focus:border-accent focus:ring-2 focus:ring-focus/30 transition-all font-medium text-ink-2"
                   value={userFormData.full_name || ''}
                   onChange={e => setUserFormData({...userFormData, full_name: e.target.value})}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Email (Opcional)</label>
+                <label className="block text-xs font-bold text-ink-3 uppercase tracking-wider mb-2">Email (Opcional)</label>
                 <input 
                   type="email"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-brand-green-600 focus:ring-2 focus:ring-brand-green-100 transition-all font-medium text-slate-700"
+                  className="w-full bg-paper-2 border border-rule rounded-xl px-4 py-2.5 outline-none focus:border-accent focus:ring-2 focus:ring-focus/30 transition-all font-medium text-ink-2"
                   value={userFormData.email || ''}
                   onChange={e => setUserFormData({...userFormData, email: e.target.value})}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Rol</label>
+                <label className="block text-xs font-bold text-ink-3 uppercase tracking-wider mb-2">Rol</label>
                 <select 
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-brand-green-600 focus:ring-2 focus:ring-brand-green-100 transition-all font-medium text-slate-700"
+                  className="w-full bg-paper-2 border border-rule rounded-xl px-4 py-2.5 outline-none focus:border-accent focus:ring-2 focus:ring-focus/30 transition-all font-medium text-ink-2"
                   value={userFormData.role || 'operador'}
                   onChange={e => setUserFormData({...userFormData, role: e.target.value as any})}
                 >
@@ -479,31 +480,31 @@ export default function SupervisorPage({ role }: { role: 'admin' | 'supervisor' 
             </div>
 
             <div className="pt-2">
-              <label className="flex items-center gap-3 cursor-pointer p-4 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors">
+              <label className="flex items-center gap-3 cursor-pointer p-4 rounded-xl border border-rule hover:bg-paper-3 transition-colors">
                 <input 
                   type="checkbox" 
-                  className="w-5 h-5 accent-brand-green-600"
+                  className="w-5 h-5 accent-[--color-accent]"
                   checked={userFormData.is_active}
                   onChange={e => setUserFormData({...userFormData, is_active: e.target.checked})}
                 />
                 <div className="select-none">
-                  <span className="block text-sm font-bold text-slate-700">Usuario Activo</span>
-                  <span className="block text-xs text-slate-500 font-medium mt-0.5">Permite el acceso al sistema</span>
+                  <span className="block text-sm font-bold text-ink-2">Usuario Activo</span>
+                  <span className="block text-xs text-ink-3 font-medium mt-0.5">Permite el acceso al sistema</span>
                 </div>
               </label>
             </div>
 
-            <div className="flex gap-3 justify-end pt-5 border-t border-slate-100 mt-6">
+            <div className="flex gap-3 justify-end pt-5 border-t border-rule mt-6">
               <button 
                 type="button" 
                 onClick={() => setShowUserForm(false)} 
-                className="px-5 py-2.5 text-sm font-bold tracking-wide uppercase text-slate-500 hover:bg-slate-100 rounded-xl transition-all"
+                className="px-5 py-2.5 text-sm font-bold tracking-wide uppercase text-ink-3 hover:bg-paper-3 rounded-xl transition-all"
               >
                 Cancelar
               </button>
               <button 
                 type="submit" 
-                className="px-6 py-2.5 text-sm font-bold tracking-wide uppercase bg-brand-green-900 text-white hover:brightness-110 rounded-xl shadow-md transition-all"
+                className="px-6 py-2.5 text-sm font-bold tracking-wide uppercase bg-accent-strong text-white hover:brightness-110 rounded-xl shadow-md transition-all"
               >
                 Guardar Usuario
               </button>

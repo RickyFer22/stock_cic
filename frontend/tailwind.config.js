@@ -1,3 +1,17 @@
+/**
+ * Token semántico con soporte de opacidad.
+ *
+ * Un token declarado como el string 'var(--color-x)' NO admite el modificador de
+ * Tailwind: `border-state-warn/40` no generaba ninguna regla y el borde caía
+ * callado en el gris por defecto de preflight. Tailwind solo puede inyectar el
+ * alfa si el color es una función, así que devolvemos color-mix cuando pide
+ * opacidad y el var() pelado cuando no.
+ */
+const tok = (nombre) => ({ opacityValue }) =>
+  opacityValue === undefined
+    ? `var(--color-${nombre})`
+    : `color-mix(in oklab, var(--color-${nombre}) calc(${opacityValue} * 100%), transparent)`
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
@@ -11,21 +25,21 @@ export default {
         /* Tokens semánticos del sistema (design.md). Se usan por nombre —
            bg-paper, text-ink-2, border-rule— y responden solos al tema oscuro
            porque son variables CSS, no valores fijos. */
-        paper:   { DEFAULT: 'var(--color-paper)', 2: 'var(--color-paper-2)', 3: 'var(--color-paper-3)' },
-        ink:     { DEFAULT: 'var(--color-ink)', 2: 'var(--color-ink-2)', 3: 'var(--color-ink-3)' },
-        rule:    { DEFAULT: 'var(--color-rule)', strong: 'var(--color-rule-strong)' },
+        paper:   { DEFAULT: tok('paper'), 2: tok('paper-2'), 3: tok('paper-3') },
+        ink:     { DEFAULT: tok('ink'), 2: tok('ink-2'), 3: tok('ink-3') },
+        rule:    { DEFAULT: tok('rule'), strong: tok('rule-strong') },
         accent:  {
-          DEFAULT: 'var(--color-accent)',
-          strong:  'var(--color-accent-strong)',
-          soft:    'var(--color-accent-soft)',
-          ink:     'var(--color-accent-ink)',
+          DEFAULT: tok('accent'),
+          strong:  tok('accent-strong'),
+          soft:    tok('accent-soft'),
+          ink:     tok('accent-ink'),
         },
-        focus:   'var(--color-focus)',
+        focus:   tok('focus'),
         state: {
-          ok:        'var(--color-ok)',      'ok-bg':     'var(--color-ok-bg)',
-          warn:      'var(--color-warn)',    'warn-bg':   'var(--color-warn-bg)',
-          danger:    'var(--color-danger)',  'danger-bg': 'var(--color-danger-bg)',
-          info:      'var(--color-info)',    'info-bg':   'var(--color-info-bg)',
+          ok:        tok('ok'),      'ok-bg':     tok('ok-bg'),
+          warn:      tok('warn'),    'warn-bg':   tok('warn-bg'),
+          danger:    tok('danger'),  'danger-bg': tok('danger-bg'),
+          info:      tok('info'),    'info-bg':   tok('info-bg'),
         },
         brand: {
           blue: {

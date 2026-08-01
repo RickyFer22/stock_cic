@@ -25,17 +25,17 @@ export default function ConfirmDialog({
 }) {
   const confirmClass =
     tone === 'danger'
-      ? 'bg-rose-600 hover:bg-rose-700'
-      : 'bg-brand-green-900 hover:bg-brand-green-800'
+      ? 'bg-state-danger hover:brightness-110'
+      : 'bg-accent-strong hover:brightness-110'
 
   return (
     <Modal title={title} onClose={onCancel} size="sm">
-      <p className="text-sm text-slate-600 font-medium leading-relaxed">{message}</p>
+      <p className="text-sm text-ink-2 font-medium leading-relaxed">{message}</p>
       <div className="pt-6 flex justify-end gap-3">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 rounded-xl text-slate-600 font-semibold hover:bg-slate-100 transition"
+          className="px-4 py-2 rounded-xl text-ink-2 font-semibold hover:bg-paper-3 transition"
         >
           {cancelLabel}
         </button>
@@ -43,7 +43,7 @@ export default function ConfirmDialog({
           type="button"
           onClick={onConfirm}
           disabled={loading}
-          className={`px-5 py-2 rounded-xl text-white font-bold disabled:opacity-50 transition ${confirmClass}`}
+          className={`px-5 py-2 rounded-xl text-paper font-bold disabled:opacity-50 transition ${confirmClass}`}
         >
           {loading ? 'Procesando...' : confirmLabel}
         </button>
