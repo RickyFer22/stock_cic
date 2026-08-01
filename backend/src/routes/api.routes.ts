@@ -35,21 +35,24 @@ apiRouter.delete('/items/:id', requireRole('admin', 'supervisor'), itemsControll
 
 // Movimientos
 apiRouter.post('/stock/ingreso', requireRole('admin', 'supervisor'), stockController.createIngreso.bind(stockController))
-apiRouter.post('/stock/distribution', stockController.createDistribution.bind(stockController))
+// Una distribucion mueve stock igual que un egreso: se le exige el mismo rol.
+apiRouter.post('/stock/distribution', requireRole('admin', 'supervisor', 'operador'), stockController.createDistribution.bind(stockController))
 apiRouter.post('/stock/outbound', requireRole('admin', 'supervisor', 'operador'), stockController.createOutbound.bind(stockController))
-apiRouter.get('/movements', stockController.getMovements.bind(stockController))
-apiRouter.get('/movements/:id', stockController.getMovement.bind(stockController))
+apiRouter.get('/movements', requireRole('admin', 'supervisor', 'operador'), stockController.getMovements.bind(stockController))
+apiRouter.get('/movements/:id', requireRole('admin', 'supervisor', 'operador'), stockController.getMovement.bind(stockController))
 
 // Beneficiarios
-apiRouter.get('/beneficiaries', beneficiariesController.list.bind(beneficiariesController))
-apiRouter.get('/beneficiaries/search', stockController.searchBeneficiaries.bind(stockController))
-apiRouter.get('/beneficiaries/:id', beneficiariesController.getOne.bind(beneficiariesController))
-apiRouter.post('/beneficiaries', beneficiariesController.create.bind(beneficiariesController))
-apiRouter.put('/beneficiaries/:id', beneficiariesController.update.bind(beneficiariesController))
+// Contienen datos personales (DNI, domicilio, telefono): la lectura queda para los
+// tres roles operativos y la escritura solo para admin y supervisor.
+apiRouter.get('/beneficiaries', requireRole('admin', 'supervisor', 'operador'), beneficiariesController.list.bind(beneficiariesController))
+apiRouter.get('/beneficiaries/search', requireRole('admin', 'supervisor', 'operador'), stockController.searchBeneficiaries.bind(stockController))
+apiRouter.get('/beneficiaries/:id', requireRole('admin', 'supervisor', 'operador'), beneficiariesController.getOne.bind(beneficiariesController))
+apiRouter.post('/beneficiaries', requireRole('admin', 'supervisor'), beneficiariesController.create.bind(beneficiariesController))
+apiRouter.put('/beneficiaries/:id', requireRole('admin', 'supervisor'), beneficiariesController.update.bind(beneficiariesController))
 
 // Distribuciones
-apiRouter.get('/distributions', distributionsController.list.bind(distributionsController))
-apiRouter.get('/distributions/:id', distributionsController.getOne.bind(distributionsController))
+apiRouter.get('/distributions', requireRole('admin', 'supervisor', 'operador'), distributionsController.list.bind(distributionsController))
+apiRouter.get('/distributions/:id', requireRole('admin', 'supervisor', 'operador'), distributionsController.getOne.bind(distributionsController))
 
 // Usuarios / Supervisor
 apiRouter.get('/users', requireRole('admin'), usersController.list.bind(usersController))
@@ -58,8 +61,8 @@ apiRouter.put('/users/:id', requireRole('admin'), usersController.update.bind(us
 
 // Cierres de inventario
 apiRouter.post('/inventory/closing', requireRole('admin', 'supervisor'), stockController.createInventoryClosing.bind(stockController))
-apiRouter.get('/inventory/closings', inventoryController.list.bind(inventoryController))
-apiRouter.get('/inventory/closings/:id', inventoryController.getOne.bind(inventoryController))
+apiRouter.get('/inventory/closings', requireRole('admin', 'supervisor', 'operador'), inventoryController.list.bind(inventoryController))
+apiRouter.get('/inventory/closings/:id', requireRole('admin', 'supervisor', 'operador'), inventoryController.getOne.bind(inventoryController))
 
 // Alertas y estadísticas
 apiRouter.get('/alerts', requireRole('admin', 'supervisor', 'operador'), alertsController.list.bind(alertsController))
@@ -81,4 +84,8 @@ apiRouter.get('/export/inventory-health.xlsx', requireRole('admin', 'supervisor'
 // Soporte Técnico
 apiRouter.get('/support', supportController.list.bind(supportController))
 apiRouter.post('/support', supportController.create.bind(supportController))
+// Responder: lo permite el autor de la consulta y soporte. La autorizacion fina
+// se resuelve en el controlador porque depende de quien creo el ticket.
+apiRouter.post('/support/:id/mensajes', supportController.addMessage.bind(supportController))
+// Cambiar estado: solo soporte.
 apiRouter.put('/support/:id', requireRole('admin', 'supervisor'), supportController.update.bind(supportController))

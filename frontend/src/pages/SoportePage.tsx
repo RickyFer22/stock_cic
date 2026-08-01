@@ -5,7 +5,9 @@ import Modal from '../components/Modal'
 import Banner, { type Feedback } from '../components/Banner'
 
 export default function SoportePage({ role }: { role: string | null }) {
-  const isAdmin = role === 'admin' || role === 'administrator' || role === 'supervisor'
+  // La base solo admite admin, supervisor y operador (schema.sql). 'administrator'
+  // era una comprobacion que nunca podia cumplirse.
+  const isSoporte = role === 'admin' || role === 'supervisor'
 
   const [tickets, setTickets] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -53,15 +55,17 @@ export default function SoportePage({ role }: { role: string | null }) {
     setMessages(ticket.respuestas || [])
   }
 
+  // El servidor agrega el mensaje al hilo y devuelve el ticket actualizado. Antes
+  // se enviaba el arreglo completo desde esta copia local, que podia estar vieja:
+  // dos personas respondiendo a la vez se pisaban el mensaje.
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !viewTicket) return
     try {
       setSendingMessage(true)
-      const nuevasRespuestas = [...(viewTicket.respuestas || []), { rol: isAdmin ? 'admin' : 'usuario', mensaje: newMessage, fecha: new Date().toISOString() }]
-      await apiPut(`/api/support/${viewTicket.id}`, { respuestas: nuevasRespuestas })
+      const res = await apiPost<{ data: any }>(`/api/support/${viewTicket.id}/mensajes`, { mensaje: newMessage })
       setNewMessage('')
-      setMessages(nuevasRespuestas)
-      setViewTicket({ ...viewTicket, respuestas: nuevasRespuestas })
+      setMessages(res.data.respuestas || [])
+      setViewTicket({ ...viewTicket, ...res.data })
       loadTickets()
     } catch (err: any) {
       setFeedback({ tone: 'error', text: err.message || 'No se pudo enviar el mensaje.' })
@@ -162,8 +166,8 @@ export default function SoportePage({ role }: { role: string | null }) {
               <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
               </div>
-              <h3 className="text-lg font-bold text-slate-900">No hay tickets generados</h3>
-              <p className="text-slate-500 mt-1 text-sm">Aún no has creado consultas de soporte.</p>
+              <h3 className="text-lg font-bold text-slate-900">{isSoporte ? 'No hay consultas abiertas' : 'Todavía no abriste ninguna consulta'}</h3>
+              <p className="text-slate-500 mt-1 text-sm">{isSoporte ? 'Cuando el personal envíe una consulta, aparece acá.' : 'Si tenés un problema con el sistema, escribinos.'}</p>
             </div>
           ) : (
             <div className="grid gap-3">
@@ -236,7 +240,7 @@ export default function SoportePage({ role }: { role: string | null }) {
               </p>
             </div>
 
-            {isAdmin && (
+            {isSoporte && (
               <div className="flex items-center gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                 <label className="text-sm font-bold text-slate-700 uppercase tracking-wide">Cambiar Estado:</label>
                 <select

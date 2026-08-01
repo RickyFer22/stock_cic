@@ -29,7 +29,7 @@ type InventoryHealthSummary = {
 }
 
 export default function ItemsPage({ role }: { role: string | null }) {
-  const isAdminOrSupervisor = role === 'admin' || role === 'supervisor' || role === 'administrator'
+  const isAdminOrSupervisor = role === 'admin' || role === 'supervisor'
 
   const [items, setItems] = useState<ItemRow[]>([])
   const [loading, setLoading] = useState(true)
