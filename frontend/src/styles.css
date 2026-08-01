@@ -48,13 +48,10 @@
 }
 
 /* Subtle municipal-feel background */
-body {
-  font-family: "Source Sans 3", ui-sans-serif, system-ui;
-  background-image:
-    radial-gradient(900px 500px at 15% 10%, rgba(20, 82, 51, 0.10), transparent 60%),
-    radial-gradient(700px 500px at 85% 0%, rgba(212, 175, 55, 0.08), transparent 55%);
-  background-attachment: fixed;
-}
+/* Los gradientes radiales verde/dorado que había acá se quitaron: eran valores
+   rgba fijos que no responden al tema, y sobre una pantalla de tablas densas la
+   decoración de fondo solo resta contraste al dato. El género modern-minimal la
+   excluye y design.md prohíbe enriquecimiento en pantallas de aplicación. */
 
 /* Scrollbar hide utility */
 .scrollbar-hide::-webkit-scrollbar {
