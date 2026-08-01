@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import EmptyState from './components/EmptyState'
+import ThemeToggle from './components/ThemeToggle'
 import HelpPanel from './components/HelpPanel'
 import { apiGet, setToken } from './api/client'
 import DistributionsPage from './pages/DistributionsPage'
@@ -29,21 +30,28 @@ type NavButtonProps = {
 }
 
 function NavButton({ label, active, tone = 'green', onClick }: NavButtonProps) {
+  // El estado activo se marca con relleno de acento Y aria-current: el color no
+  // comunica solo. El tono ámbar distingue Supervisor sin salir de la escala
+  // semántica de "atención".
   const activeClass =
     tone === 'amber'
-      ? 'bg-amber-600 text-white border-amber-600 shadow-md'
-      : 'bg-brand-green-900 text-white border-brand-green-900 shadow-md'
+      ? 'bg-state-warn text-paper border-state-warn'
+      : 'bg-accent-strong text-accent-ink border-accent-strong'
 
   const idleClass =
     tone === 'amber'
-      ? 'bg-white text-amber-700 border-amber-200 hover:border-amber-500 hover:bg-amber-50'
-      : 'bg-white text-slate-600 border-slate-200 hover:border-brand-green-500/30 hover:bg-slate-50'
+      ? 'bg-paper text-state-warn border-rule hover:border-state-warn'
+      : 'bg-paper text-ink-2 border-rule hover:text-ink hover:border-rule-strong'
 
   return (
     <button
       onClick={onClick}
       aria-current={active ? 'page' : undefined}
-      className={`px-4 py-2.5 rounded-xl font-bold tracking-wide uppercase text-xs sm:text-sm border-2 transition-all ${active ? activeClass : idleClass}`}
+      className={`min-h-[2.75rem] px-4 py-2.5 rounded-[--radius-input] border
+        font-bold tracking-wide uppercase text-[length:--text-xs] sm:text-[length:--text-sm]
+        transition-colors duration-[--dur-fast] ease-[--ease-out]
+        focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus
+        ${active ? activeClass : idleClass}`}
     >
       {label}
     </button>
@@ -53,31 +61,38 @@ function NavButton({ label, active, tone = 'green', onClick }: NavButtonProps) {
 function Shell({ children, userName, onLogout, onHelp, showHelpButton }: ShellProps) {
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-40 border-b border-white/20 glass shadow-sm">
+      {/* Sin glassmorphism: el género modern-minimal lo excluye, y sobre una
+          tabla densa el desenfoque solo agrega ruido. Papel sólido y una regla. */}
+      <header className="sticky top-0 z-40 border-b border-rule bg-paper-2">
         <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-12 h-12 rounded-2xl bg-brand-green-900 text-white flex items-center justify-center shadow-md">
-              <span className="text-xl" aria-hidden="true">🏛</span>
+            <div className="w-10 h-10 rounded-[--radius-input] bg-accent-strong text-accent-ink flex items-center justify-center shrink-0">
+              <span className="text-lg" aria-hidden="true">🏛</span>
             </div>
             <div className="min-w-0">
-              <div className="font-display text-brand-green-900 font-black tracking-wide uppercase leading-tight text-lg truncate">
-                Stock <span className="text-brand-gold-500">MSR</span>
+              <div className="font-display text-ink font-extrabold tracking-wide uppercase leading-tight text-[length:--text-md] truncate">
+                Stock <span className="text-accent">MSR</span>
               </div>
-              <div className="text-xs text-slate-500 font-bold tracking-wider uppercase truncate">Accion Social</div>
+              <div className="text-[length:--text-xs] text-ink-3 font-bold tracking-wide uppercase truncate">Acción Social</div>
             </div>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
             {userName && (
-              <span className="hidden lg:inline text-sm text-slate-600 font-medium">
-                Operador: <b className="text-slate-900">{userName}</b>
+              <span className="hidden lg:inline text-[length:--text-sm] text-ink-2">
+                Operador: <b className="text-ink">{userName}</b>
               </span>
             )}
+
+            <ThemeToggle />
 
             {showHelpButton && (
               <button
                 onClick={onHelp}
-                className="px-3 py-2 rounded-xl text-xs font-bold tracking-wider uppercase bg-brand-gold-500 text-brand-green-900 hover:brightness-110 transition shadow-sm"
+                className="min-h-[2.75rem] px-3 py-2 rounded-[--radius-input] border border-rule bg-paper
+                  text-[length:--text-xs] font-bold tracking-wide uppercase text-ink-2
+                  hover:text-ink hover:border-rule-strong transition-colors duration-[--dur-fast]
+                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
               >
                 Ayuda
               </button>
@@ -86,7 +101,10 @@ function Shell({ children, userName, onLogout, onHelp, showHelpButton }: ShellPr
             {userName && (
               <button
                 onClick={onLogout}
-                className="px-4 py-2 rounded-xl text-xs font-bold tracking-wider uppercase bg-slate-900 text-white hover:bg-slate-800 transition shadow-sm hover:shadow-md"
+                className="min-h-[2.75rem] px-4 py-2 rounded-[--radius-input] border border-rule bg-paper
+                  text-[length:--text-xs] font-bold tracking-wide uppercase text-ink-2
+                  hover:text-ink hover:border-rule-strong transition-colors duration-[--dur-fast]
+                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
               >
                 Salir
               </button>

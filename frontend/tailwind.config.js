@@ -8,6 +8,25 @@ export default {
         body: ['"Source Sans 3"', 'ui-sans-serif', 'system-ui'],
       },
       colors: {
+        /* Tokens semánticos del sistema (design.md). Se usan por nombre —
+           bg-paper, text-ink-2, border-rule— y responden solos al tema oscuro
+           porque son variables CSS, no valores fijos. */
+        paper:   { DEFAULT: 'var(--color-paper)', 2: 'var(--color-paper-2)', 3: 'var(--color-paper-3)' },
+        ink:     { DEFAULT: 'var(--color-ink)', 2: 'var(--color-ink-2)', 3: 'var(--color-ink-3)' },
+        rule:    { DEFAULT: 'var(--color-rule)', strong: 'var(--color-rule-strong)' },
+        accent:  {
+          DEFAULT: 'var(--color-accent)',
+          strong:  'var(--color-accent-strong)',
+          soft:    'var(--color-accent-soft)',
+          ink:     'var(--color-accent-ink)',
+        },
+        focus:   'var(--color-focus)',
+        state: {
+          ok:        'var(--color-ok)',      'ok-bg':     'var(--color-ok-bg)',
+          warn:      'var(--color-warn)',    'warn-bg':   'var(--color-warn-bg)',
+          danger:    'var(--color-danger)',  'danger-bg': 'var(--color-danger-bg)',
+          info:      'var(--color-info)',    'info-bg':   'var(--color-info-bg)',
+        },
         brand: {
           blue: {
             900: 'var(--sr-blue-900)',

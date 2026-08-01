@@ -1,0 +1,14 @@
+[
+  {
+    "date": "2026-08-01",
+    "scope": "app",
+    "genre": "modern-minimal",
+    "macrostructure": "Workbench",
+    "theme": "custom (institucional)",
+    "theme_axes": "light+dark / geometric-sans / green 154",
+    "vibe": "gestión municipal densa y sobria",
+    "enrichment": "none",
+    "design_system": "design.md",
+    "brief": "Stock CIC · redesign de las 5 pantallas de aplicación"
+  }
+]

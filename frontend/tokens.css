@@ -1,0 +1,188 @@
+/* Hallmark · genre: modern-minimal · macrostructure: Workbench · design-system: design.md · designed-as-app
+ * theme: custom (institucional) · paper-band: light+dark · display-style: geometric-sans · accent-hue: green 154
+ * Tokens del sistema. Ver design.md para las reglas de uso.
+ * Toda pantalla referencia estos nombres; ningún componente inventa un color.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* ── Superficie ─────────────────────────────────────────────
+     Neutros con sesgo verde (C 0.004–0.02 en H 155), no grises puros:
+     un gris neutro al lado del verde institucional se lee como error
+     de impresión, no como decisión. */
+  --color-paper:        oklch(99%   0.004 155);
+  --color-paper-2:      oklch(97%   0.006 155);
+  --color-paper-3:      oklch(94.5% 0.008 155);
+
+  --color-ink:          oklch(22%   0.020 155);
+  --color-ink-2:        oklch(42%   0.015 155);
+  --color-ink-3:        oklch(55%   0.012 155);
+
+  --color-rule:         oklch(89%   0.008 155);
+  --color-rule-strong:  oklch(82%   0.010 155);
+
+  /* ── Acento institucional ───────────────────────────────────
+     El verde 700 original (#1f8a4f) da 4.37:1 sobre blanco: sirve para
+     componentes de interfaz, no para texto normal. Por eso el acento de
+     texto es el 800 (6.20:1) y el relleno primario el 900 (9.19:1). */
+  --color-accent:        oklch(48%   0.110 154);
+  --color-accent-strong: oklch(39%   0.082 157);
+  --color-accent-soft:   oklch(95%   0.030 155);
+  --color-accent-ink:    oklch(99%   0.004 155);
+  --color-focus:         oklch(56%   0.131 154);
+
+  /* ── Estados operativos ─────────────────────────────────────
+     Escala separada del acento. Se usan como pastilla teñida o texto en
+     línea, nunca como relleno de botón: si el estado "ok" fuera un relleno
+     verde, competiría con la acción primaria. */
+  --color-ok:          oklch(45% 0.10 158);
+  --color-ok-bg:       oklch(94% 0.04 158);
+  --color-warn:        oklch(48% 0.12 70);
+  --color-warn-bg:     oklch(94% 0.05 80);
+  --color-danger:      oklch(48% 0.16 25);
+  --color-danger-bg:   oklch(94% 0.05 25);
+  --color-info:        oklch(45% 0.13 250);
+  --color-info-bg:     oklch(94% 0.04 250);
+
+  /* ── Tipografía ─────────────────────────────────────────────
+     Las que el proyecto ya carga desde Google Fonts. */
+  --font-display: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-body:    "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Escala contenida: es una aplicación de gestión, el título de pantalla
+     no compite con los datos. */
+  --text-xs:      0.75rem;
+  --text-sm:      0.8125rem;
+  --text-base:    0.9375rem;
+  --text-md:      1.0625rem;
+  --text-lg:      1.25rem;
+  --text-xl:      1.5rem;
+  --text-display: clamp(1.5rem, 2vw + 1rem, 2rem);
+
+  /* ── Espaciado · escala de 4 pt ─────────────────────────────── */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs:  0.75rem;
+  --space-sm:  1rem;
+  --space-md:  1.5rem;
+  --space-lg:  2rem;
+  --space-xl:  3rem;
+  --space-2xl: 4.5rem;
+
+  /* ── Forma ──────────────────────────────────────────────────
+     Radios contenidos. El 2rem anterior daba a las tarjetas de datos un
+     aire de tarjeta de marketing. */
+  --radius-input: 10px;
+  --radius-card:  14px;
+  --radius-pill:  999px;
+  --rule-hair:    1px;
+
+  --shadow-card: 0 1px 2px oklch(22% 0.02 155 / 0.05),
+                 0 8px 24px oklch(22% 0.02 155 / 0.06);
+  --shadow-lift: 0 2px 4px oklch(22% 0.02 155 / 0.07),
+                 0 12px 32px oklch(22% 0.02 155 / 0.10);
+
+  /* ── Movimiento ─────────────────────────────────────────────
+     Proyecto motion-cut: transiciones de estado, nada de reveals. */
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast:    120ms;
+  --dur-short:   180ms;
+}
+
+/* ── Tema oscuro ──────────────────────────────────────────────
+   El depósito puede tener pantallas con poca luz. No es una inversión
+   automática: el acento sube en luminosidad para sostener el contraste
+   sobre papel oscuro. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-paper:        oklch(16% 0.012 155);
+    --color-paper-2:      oklch(20% 0.014 155);
+    --color-paper-3:      oklch(25% 0.016 155);
+
+    --color-ink:          oklch(94% 0.008 155);
+    --color-ink-2:        oklch(78% 0.010 155);
+    --color-ink-3:        oklch(62% 0.012 155);
+
+    --color-rule:         oklch(30% 0.014 155);
+    --color-rule-strong:  oklch(38% 0.016 155);
+
+    --color-accent:        oklch(75% 0.150 153);
+    --color-accent-strong: oklch(68% 0.158 153);
+    --color-accent-soft:   oklch(26% 0.040 155);
+    --color-accent-ink:    oklch(16% 0.012 155);
+    --color-focus:         oklch(78% 0.150 153);
+
+    --color-ok:        oklch(78% 0.14 158);
+    --color-ok-bg:     oklch(26% 0.05 158);
+    --color-warn:      oklch(82% 0.13 80);
+    --color-warn-bg:   oklch(28% 0.06 70);
+    --color-danger:    oklch(75% 0.15 25);
+    --color-danger-bg: oklch(27% 0.07 25);
+    --color-info:      oklch(78% 0.12 250);
+    --color-info-bg:   oklch(26% 0.06 250);
+
+    --shadow-card: 0 1px 2px oklch(0% 0 0 / 0.35), 0 8px 24px oklch(0% 0 0 / 0.30);
+    --shadow-lift: 0 2px 4px oklch(0% 0 0 / 0.40), 0 12px 32px oklch(0% 0 0 / 0.38);
+  }
+}
+
+/* El interruptor manual gana sobre la preferencia del sistema, en ambos
+   sentidos. */
+:root[data-theme="dark"] {
+  --color-paper:        oklch(16% 0.012 155);
+  --color-paper-2:      oklch(20% 0.014 155);
+  --color-paper-3:      oklch(25% 0.016 155);
+  --color-ink:          oklch(94% 0.008 155);
+  --color-ink-2:        oklch(78% 0.010 155);
+  --color-ink-3:        oklch(62% 0.012 155);
+  --color-rule:         oklch(30% 0.014 155);
+  --color-rule-strong:  oklch(38% 0.016 155);
+  --color-accent:        oklch(75% 0.150 153);
+  --color-accent-strong: oklch(68% 0.158 153);
+  --color-accent-soft:   oklch(26% 0.040 155);
+  --color-accent-ink:    oklch(16% 0.012 155);
+  --color-focus:         oklch(78% 0.150 153);
+  --color-ok:        oklch(78% 0.14 158);
+  --color-ok-bg:     oklch(26% 0.05 158);
+  --color-warn:      oklch(82% 0.13 80);
+  --color-warn-bg:   oklch(28% 0.06 70);
+  --color-danger:    oklch(75% 0.15 25);
+  --color-danger-bg: oklch(27% 0.07 25);
+  --color-info:      oklch(78% 0.12 250);
+  --color-info-bg:   oklch(26% 0.06 250);
+  --shadow-card: 0 1px 2px oklch(0% 0 0 / 0.35), 0 8px 24px oklch(0% 0 0 / 0.30);
+  --shadow-lift: 0 2px 4px oklch(0% 0 0 / 0.40), 0 12px 32px oklch(0% 0 0 / 0.38);
+}
+
+:root[data-theme="light"] {
+  --color-paper:        oklch(99%   0.004 155);
+  --color-paper-2:      oklch(97%   0.006 155);
+  --color-paper-3:      oklch(94.5% 0.008 155);
+  --color-ink:          oklch(22%   0.020 155);
+  --color-ink-2:        oklch(42%   0.015 155);
+  --color-ink-3:        oklch(55%   0.012 155);
+  --color-rule:         oklch(89%   0.008 155);
+  --color-rule-strong:  oklch(82%   0.010 155);
+  --color-accent:        oklch(48%   0.110 154);
+  --color-accent-strong: oklch(39%   0.082 157);
+  --color-accent-soft:   oklch(95%   0.030 155);
+  --color-accent-ink:    oklch(99%   0.004 155);
+  --color-focus:         oklch(56%   0.131 154);
+  --color-ok:        oklch(45% 0.10 158);
+  --color-ok-bg:     oklch(94% 0.04 158);
+  --color-warn:      oklch(48% 0.12 70);
+  --color-warn-bg:   oklch(94% 0.05 80);
+  --color-danger:    oklch(48% 0.16 25);
+  --color-danger-bg: oklch(94% 0.05 25);
+  --color-info:      oklch(45% 0.13 250);
+  --color-info-bg:   oklch(94% 0.04 250);
+  --shadow-card: 0 1px 2px oklch(22% 0.02 155 / 0.05), 0 8px 24px oklch(22% 0.02 155 / 0.06);
+  --shadow-lift: 0 2px 4px oklch(22% 0.02 155 / 0.07), 0 12px 32px oklch(22% 0.02 155 / 0.10);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-fast: 0ms; --dur-short: 120ms; }
+}

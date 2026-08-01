@@ -1,11 +1,9 @@
 /**
- * Componentes base del sistema.
+ * Componentes base del sistema. Ver design.md.
  *
- * Antes cada pantalla repetía literalmente las mismas cadenas de utilidades:
- * `bg-white/80 backdrop-blur-md rounded-[2rem] border border-white/60` aparecía
- * 16 veces, `px-5 py-2.5 rounded-xl` otras 15. Cualquier ajuste visual obligaba
- * a editar siete archivos y a acertar en todos. Eso —y no el color— es la causa
- * de la inconsistencia entre módulos.
+ * Todos los colores salen de tokens semánticos (bg-paper, text-ink-2,
+ * border-rule…), nunca de una utilidad de color cruda. Por eso el tema oscuro
+ * funciona sin una sola clase `dark:`: los tokens ya cambian de valor.
  */
 import type { ReactNode, ButtonHTMLAttributes } from 'react'
 
@@ -17,47 +15,72 @@ export function Card({ children, className = '', padded = true }: {
   padded?: boolean
 }) {
   return (
-    <div className={`bg-white/80 backdrop-blur-md border border-white/60 rounded-3xl shadow-card ${padded ? 'p-5' : ''} ${className}`}>
+    <div
+      className={`bg-paper-2 border border-rule rounded-[--radius-card] shadow-[--shadow-card]
+        ${padded ? 'p-4 sm:p-5' : ''} ${className}`}
+    >
       {children}
     </div>
   )
 }
 
-/** Encabezado de pantalla: título, bajada y acciones. */
+/**
+ * Encabezado de pantalla. Título en versalitas, bajada de una línea, acciones a
+ * la derecha. La escala es contenida a propósito: es una aplicación de gestión y
+ * el título no debe competir con los datos.
+ */
 export function PageHeader({ title, subtitle, actions }: {
   title: string
   subtitle?: string
   actions?: ReactNode
 }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4">
       <div className="min-w-0">
-        <h1 className="font-display font-black text-brand-green-900 text-3xl uppercase tracking-wider">{title}</h1>
-        {subtitle && <p className="text-slate-600 mt-1 font-medium text-sm">{subtitle}</p>}
+        <h1 className="font-display font-extrabold text-ink uppercase tracking-[-0.01em] text-[length:--text-display] leading-tight">
+          {title}
+        </h1>
+        {subtitle && <p className="text-ink-2 mt-1 text-[length:--text-base]">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
   )
 }
 
-/** Etiqueta de sección en versalitas, repetida 28 veces en el código anterior. */
 export function Label({ children, htmlFor }: { children: ReactNode; htmlFor?: string }) {
   return (
-    <label htmlFor={htmlFor} className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">
+    <label
+      htmlFor={htmlFor}
+      className="block text-[length:--text-xs] font-bold text-ink-3 uppercase tracking-wide mb-1.5"
+    >
       {children}
     </label>
   )
 }
 
-/* ────────────────────────── Botones ────────────────────────── */
+/** Campo de texto y selector comparten ritmo: mismo alto, mismo radio, mismo foco. */
+export const campoClases =
+  `w-full rounded-[--radius-input] border border-rule bg-paper text-ink
+   px-3.5 py-2.5 text-[length:--text-base] outline-none
+   placeholder:text-ink-3
+   focus:border-focus focus-visible:outline focus-visible:outline-2
+   focus-visible:outline-offset-1 focus-visible:outline-focus
+   disabled:opacity-50 disabled:cursor-not-allowed
+   transition-colors duration-[--dur-fast]`
+
+/* ────────────────────────── Acciones ────────────────────────── */
 
 type Variante = 'primary' | 'secondary' | 'danger' | 'ghost'
 
 const VARIANTE: Record<Variante, string> = {
-  primary:   'bg-brand-green-900 text-white border-transparent hover:bg-brand-green-800',
-  secondary: 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300',
-  danger:    'bg-rose-600 text-white border-transparent hover:bg-rose-700',
-  ghost:     'bg-transparent text-slate-600 border-transparent hover:bg-slate-100',
+  // El relleno primario usa accent-strong (9:1 sobre su texto). El 700 original
+  // no alcanzaba para texto normal.
+  primary:   'bg-accent-strong text-accent-ink border-transparent hover:brightness-110',
+  secondary: 'bg-paper text-ink-2 border-rule hover:border-rule-strong hover:text-ink',
+  // Destructiva en contorno: el relleno rojo se reserva para la confirmación
+  // dentro del diálogo, donde la acción ya es inminente.
+  danger:    'bg-transparent text-state-danger border-state-danger hover:bg-state-danger-bg',
+  ghost:     'bg-transparent text-ink-2 border-transparent hover:bg-paper-3 hover:text-ink',
 }
 
 export function Button({
@@ -72,10 +95,14 @@ export function Button({
     <button
       {...rest}
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border-2
-        font-bold uppercase tracking-wide text-sm whitespace-nowrap transition-all
-        disabled:opacity-50 disabled:cursor-not-allowed
-        focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-700
+      aria-busy={loading || undefined}
+      className={`inline-flex items-center justify-center gap-2
+        min-h-[2.75rem] px-4 py-2.5 rounded-[--radius-input] border
+        font-body font-bold uppercase tracking-wide text-[length:--text-sm]
+        whitespace-nowrap
+        transition-[background-color,border-color,color,filter] duration-[--dur-fast] ease-[--ease-out]
+        disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:brightness-100
+        focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus
         ${VARIANTE[variant]} ${className}`}
     >
       {loading ? 'Procesando…' : children}
@@ -88,20 +115,24 @@ export function Button({
 type Tono = 'ok' | 'warn' | 'danger' | 'info' | 'neutral'
 
 const TONO: Record<Tono, string> = {
-  ok:      'bg-emerald-100 text-emerald-800 border-emerald-200',
-  warn:    'bg-amber-100 text-amber-800 border-amber-200',
-  danger:  'bg-rose-100 text-rose-800 border-rose-200',
-  info:    'bg-sky-100 text-sky-800 border-sky-200',
-  neutral: 'bg-slate-100 text-slate-700 border-slate-200',
+  ok:      'bg-state-ok-bg text-state-ok border-state-ok/25',
+  warn:    'bg-state-warn-bg text-state-warn border-state-warn/25',
+  danger:  'bg-state-danger-bg text-state-danger border-state-danger/25',
+  info:    'bg-state-info-bg text-state-info border-state-info/25',
+  neutral: 'bg-paper-3 text-ink-2 border-rule',
 }
 
 /**
- * El estado se comunica con texto, no solo con color: es requisito de WCAG 1.4.1
- * y además sobrevive a la impresión en blanco y negro, que en oficina ocurre.
+ * Pastilla de estado. Siempre teñida, nunca rellena: si el estado "ok" fuera un
+ * relleno verde competiría con la acción primaria, que es el otro verde de la
+ * pantalla. Y siempre lleva su etiqueta de texto — el color no comunica solo.
  */
 export function Badge({ tone = 'neutral', children }: { tone?: Tono; children: ReactNode }) {
   return (
-    <span className={`inline-block px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-widest ${TONO[tone]}`}>
+    <span
+      className={`inline-block px-2 py-0.5 rounded-[--radius-pill] border
+        text-[length:--text-xs] font-bold uppercase tracking-wide ${TONO[tone]}`}
+    >
       {children}
     </span>
   )
@@ -110,13 +141,13 @@ export function Badge({ tone = 'neutral', children }: { tone?: Tono; children: R
 /* ────────────────────────── Tabla ────────────────────────── */
 
 /**
- * Envoltorio de tabla con encabezado fijo y, por debajo de 900px, filas apiladas
- * como tarjetas. Cada celda debe llevar `data-label` con el nombre de su columna
- * (ver .table-responsive en styles.css).
+ * Tabla con encabezado fijo. Por debajo de 900 px cada fila se apila como
+ * tarjeta con etiquetas (ver .table-responsive en styles.css): en un teléfono,
+ * arrastrar en horizontal para leer una fila no es leer.
  */
 export function TableWrap({ children, maxHeight = '65vh' }: { children: ReactNode; maxHeight?: string }) {
   return (
-    <div className="bg-white/80 backdrop-blur-md border border-white/60 rounded-3xl shadow-card overflow-hidden">
+    <div className="bg-paper-2 border border-rule rounded-[--radius-card] shadow-[--shadow-card] overflow-hidden">
       <div className="table-responsive overflow-auto scrollbar-hide" style={{ maxHeight }}>
         {children}
       </div>
@@ -126,13 +157,22 @@ export function TableWrap({ children, maxHeight = '65vh' }: { children: ReactNod
 
 export function Th({ children, align = 'left' }: { children: ReactNode; align?: 'left' | 'right' }) {
   return (
-    <th scope="col" className={`px-5 py-4 font-bold sticky top-0 bg-slate-100 z-10 ${align === 'right' ? 'text-right' : 'text-left'}`}>
+    <th
+      scope="col"
+      className={`px-4 py-3 sticky top-0 z-10 bg-paper-3 text-ink-2 border-b border-rule
+        font-bold text-[length:--text-xs] uppercase tracking-wide
+        ${align === 'right' ? 'text-right' : 'text-left'}`}
+    >
       {children}
     </th>
   )
 }
 
-/** Pie de tabla con rango visible y navegación entre páginas. */
+/** Celda numérica: tabular-nums obligatorio o los dígitos bailan al paginar. */
+export function TdNum({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return <td className={`px-4 py-3 text-right tabular-nums text-ink ${className}`}>{children}</td>
+}
+
 export function Pager({ page, totalPages, total, pageSize, onChange, extra }: {
   page: number
   totalPages: number
@@ -144,16 +184,18 @@ export function Pager({ page, totalPages, total, pageSize, onChange, extra }: {
   const desde = total === 0 ? 0 : (page - 1) * pageSize + 1
   const hasta = Math.min(page * pageSize, total)
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-slate-100 bg-white/60">
-      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-rule bg-paper-2">
+      <span className="text-[length:--text-xs] font-bold text-ink-3 uppercase tracking-wide tabular-nums">
         Mostrando {desde}–{hasta} de {total.toLocaleString('es-AR')}{extra ? ` · ${extra}` : ''}
       </span>
       <div className="flex items-center gap-2">
-        <Button variant="secondary" className="px-3 py-2 text-xs" disabled={page <= 1} onClick={() => onChange(Math.max(1, page - 1))}>
+        <Button variant="secondary" className="min-h-0 px-3 py-1.5 text-[length:--text-xs]"
+          disabled={page <= 1} onClick={() => onChange(Math.max(1, page - 1))}>
           Anterior
         </Button>
-        <span className="text-sm font-bold text-slate-600 tabular-nums">{page} / {totalPages}</span>
-        <Button variant="secondary" className="px-3 py-2 text-xs" disabled={page >= totalPages} onClick={() => onChange(Math.min(totalPages, page + 1))}>
+        <span className="text-[length:--text-sm] font-bold text-ink-2 tabular-nums">{page} / {totalPages}</span>
+        <Button variant="secondary" className="min-h-0 px-3 py-1.5 text-[length:--text-xs]"
+          disabled={page >= totalPages} onClick={() => onChange(Math.min(totalPages, page + 1))}>
           Siguiente
         </Button>
       </div>

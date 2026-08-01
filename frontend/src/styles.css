@@ -1,7 +1,16 @@
+/* Hallmark · genre: modern-minimal · macrostructure: Workbench
+ * design-system: design.md · designed-as-app
+ * theme: custom institucional · accent-hue: green 154 · paper-band: light+dark
+ */
+@import "../tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* La escala --sr-* se conserva: la usan clases brand-green-* en las siete
+   pantallas. Los tokens semánticos de tokens.css son la capa nueva; ambas
+   coexisten mientras se migra pantalla por pantalla. */
 :root {
   --sr-blue-900: #0c2b67;
   --sr-blue-700: #1f4ea8;
@@ -56,3 +65,94 @@ body {
     scrollbar-width: none;
 }
 
+
+/* ═══════════════════════════════════════════════════════════════
+   Base del sistema · design.md
+   ═══════════════════════════════════════════════════════════════ */
+
+html, body {
+  overflow-x: clip;           /* clip, no hidden: hidden crea contexto de scroll */
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+/* Los títulos largos parten dentro de la palabra en vez de desbordar. */
+h1, h2, h3 {
+  overflow-wrap: anywhere;
+  min-width: 0;
+  text-wrap: balance;
+}
+
+/* Foco visible propio en todo control. Nunca se anima: aparece instantáneo. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  transition: none;
+}
+
+/* ── Tabla responsive ───────────────────────────────────────────
+   Por debajo de 900 px cada fila se apila como tarjeta con etiquetas.
+   Las celdas deben llevar data-label con el nombre de su columna.
+   Arrastrar en horizontal para leer una fila no es leer. */
+.table-responsive table { width: 100%; border-collapse: collapse; }
+
+.table-responsive tbody tr { border-top: 1px solid var(--color-rule); }
+.table-responsive tbody tr:hover { background: var(--color-paper-3); }
+.table-responsive tbody td { padding: 0.75rem 1rem; color: var(--color-ink); }
+
+@media (max-width: 900px) {
+  .table-responsive { overflow: visible !important; max-height: none !important; }
+
+  .table-responsive table { border-collapse: separate; border-spacing: 0 0.5rem; }
+
+  .table-responsive thead {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .table-responsive tbody tr {
+    display: block;
+    border: 1px solid var(--color-rule);
+    border-radius: var(--radius-card);
+    background: var(--color-paper);
+    padding: 0.25rem 0;
+  }
+
+  .table-responsive tbody td {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.4rem 0.9rem;
+    text-align: right;
+    white-space: normal;
+  }
+
+  .table-responsive tbody td::before {
+    content: attr(data-label);
+    flex: 0 0 42%;
+    text-align: left;
+    font-size: var(--text-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--color-ink-3);
+  }
+
+  .table-responsive tbody td:not([data-label]) { display: block; text-align: center; }
+  .table-responsive tbody td:not([data-label])::before { content: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 120ms !important;
+  }
+}
