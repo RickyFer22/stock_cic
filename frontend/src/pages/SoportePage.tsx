@@ -353,7 +353,7 @@ export default function SoportePage({ role }: { role: string | null }) {
                 onChange={e => setNuevo(p => ({ ...p, categoria: e.target.value }))}
                 className="w-full rounded-xl border border-rule px-4 py-2.5 font-semibold outline-none focus:border-focus"
               >
-                <option value="">Seleccioná una opción</option>
+                <option value="">Seleccióná una opción</option>
                 {meta.categorias.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>

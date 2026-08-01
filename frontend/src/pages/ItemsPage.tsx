@@ -17,7 +17,48 @@ type ItemRow = {
   expiry_date?: string | null
   stock_actual: number
   stock_minimo: number
+  stock_maximo?: number | null
   is_active: boolean
+}
+
+type EstadoStock = 'sin' | 'bajo' | 'sobre' | 'vence' | 'normal'
+
+/**
+ * Clasificación de un artículo según su stock.
+ *
+ * Replica exactamente las reglas del endpoint /api/statistics/health, así que
+ * los números de las tarjetas y las filas que quedan al filtrar siempre
+ * coinciden. Si allá cambia el criterio, tiene que cambiar acá también:
+ *   sin   → stock_actual = 0
+ *   bajo  → stock_actual <= stock_minimo y > 0   (el <= es del backend, no un error)
+ *   sobre → stock_maximo definido y stock_actual > stock_maximo
+ *   vence → vencimiento dentro de los próximos 30 días
+ *
+ * Se calcula en el cliente porque /api/items devuelve el catálogo completo sin
+ * paginar, así que el listado que tenemos es el universo entero.
+ */
+function estadoDeStock(it: ItemRow): EstadoStock {
+  if (it.stock_actual === 0) return 'sin'
+  if (it.stock_minimo > 0 && it.stock_actual <= it.stock_minimo) return 'bajo'
+  if (it.stock_maximo != null && it.stock_actual > it.stock_maximo) return 'sobre'
+  return 'normal'
+}
+
+function venceProximo(it: ItemRow): boolean {
+  if (!it.expiry_date) return false
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0)
+  const limite = new Date(hoy); limite.setDate(limite.getDate() + 30)
+  const v = new Date(it.expiry_date)
+  return v >= hoy && v <= limite
+}
+
+/** Cómo se pinta cada estado en la celda de stock. 'normal' no se pinta: si todo
+ *  llevara color, el color dejaría de señalar nada. */
+const PINTA_ESTADO: Record<Exclude<EstadoStock, 'normal'>, { clase: string; etiqueta: string }> = {
+  sin:   { clase: 'text-state-danger', etiqueta: 'Sin stock' },
+  bajo:  { clase: 'text-state-warn',   etiqueta: 'Bajo el mínimo' },
+  sobre: { clase: 'text-state-ok',     etiqueta: 'Sobre el máximo' },
+  vence: { clase: 'text-state-info',   etiqueta: 'Vence pronto' },
 }
 
 type InventoryHealthSummary = {
@@ -81,12 +122,15 @@ export default function ItemsPage({ role }: { role: string | null }) {
   const [health, setHealth] = useState<InventoryHealthSummary | null>(null)
   const [healthLoading, setHealthLoading] = useState(false)
   const [search, setSearch] = useState('')
+  // Las tarjetas de estado dejan de ser solo un numero: filtran la tabla.
+  // 'normal' no es filtrable: nadie pide "mostrame lo que esta bien".
+  const [filtroEstado, setFiltroEstado] = useState<Exclude<EstadoStock, 'normal'> | 'todos'>('todos')
 
   // Proveedores ya usados, para sugerirlos en el ingreso y evitar que el mismo
   // organismo se escriba distinto en cada carga.
   const [proveedores, setProveedores] = useState<string[]>([])
 
-  // Avisos en linea y confirmacion propia, en reemplazo de alert()/confirm().
+  // Avisos en linea y confirmación propia, en reemplazo de alert()/confirm().
   const [feedback, setFeedback] = useState<Feedback>(null)
   const [itemAEliminar, setItemAEliminar] = useState<ItemRow | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -134,8 +178,13 @@ export default function ItemsPage({ role }: { role: string | null }) {
 
   const filteredItems = useMemo(() => {
     const needle = search.trim().toLowerCase()
-    if (!needle) return items
-    return items.filter((item) =>
+    const porEstado = items.filter((item) => {
+      if (filtroEstado === 'todos') return true
+      if (filtroEstado === 'vence') return venceProximo(item)
+      return estadoDeStock(item) === filtroEstado
+    })
+    if (!needle) return porEstado
+    return porEstado.filter((item) =>
       [
         item.code,
         item.name,
@@ -144,7 +193,7 @@ export default function ItemsPage({ role }: { role: string | null }) {
         item.unit,
       ].some((value) => String(value).toLowerCase().includes(needle))
     )
-  }, [items, search])
+  }, [items, search, filtroEstado])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -350,11 +399,11 @@ export default function ItemsPage({ role }: { role: string | null }) {
         />
       )}
       <HowToCard
-        title="Guia rapida de articulos"
+        title="Guía rápida de artículos"
         steps={[
-          'Paso 1: crea articulos con codigo unico.',
+          'Paso 1: crea artículos con código único.',
           'Paso 2: usa Ingresar o Egresar stock para actualizar cantidades.',
-          'Paso 3: exporta reportes para control y auditoria.',
+          'Paso 3: exporta reportes para control y auditoría.',
         ]}
       />
 
@@ -370,29 +419,53 @@ export default function ItemsPage({ role }: { role: string | null }) {
         </div>
       </div>
 
-      {/* KPIs de estado de stock */}
-      {health && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <div className="rounded-[--radius-card] p-3 bg-ink text-paper shadow-md">
-            <div className="text-xs uppercase tracking-widest font-bold opacity-80">Ítems Activos</div>
-            <div className="text-2xl font-black mt-1">{health.total}</div>
-          </div>
-          <div className="rounded-[--radius-card] p-3 bg-state-warn-bg border border-state-warn-bg text-state-warn shadow-inner">
-            <div className="text-xs uppercase tracking-widest font-bold">Bajo Stock</div>
-            <div className="text-2xl font-black mt-1">{health.lowStock}</div>
-          </div>
-          <div className="rounded-[--radius-card] p-3 bg-state-danger-bg border border-state-danger-bg text-state-danger shadow-inner">
-            <div className="text-xs uppercase tracking-widest font-bold">Sin Stock</div>
-            <div className="text-2xl font-black mt-1">{health.outOfStock}</div>
-          </div>
-          <div className="rounded-[--radius-card] p-3 bg-state-ok-bg border border-state-ok-bg text-state-ok shadow-inner">
-            <div className="text-xs uppercase tracking-widest font-bold">Sobre Stock</div>
-            <div className="text-2xl font-black mt-1">{health.overStock}</div>
-          </div>
-          <div className="rounded-[--radius-card] p-3 bg-indigo-50 border border-indigo-100 text-indigo-900 shadow-inner">
-            <div className="text-xs uppercase tracking-widest font-bold">Por Vencer (30 días)</div>
-            <div className="text-2xl font-black mt-1">{health.expiringSoon}</div>
-          </div>
+      {/* Estado del inventario. Antes eran cinco números que no se podían usar:
+          decían "3 bajo stock" y había que salir a buscar cuáles a ojo en la
+          tabla. Ahora cada uno filtra el listado, y se vuelve a tocar para
+          quitar el filtro. Los conteos salen de la misma regla que pinta las
+          filas, así que el número y las filas nunca se contradicen. */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3" role="group" aria-label="Filtrar por estado de stock">
+        {([
+          { k: 'todos', l: 'Ítems activos',        n: items.length,                                         clase: 'text-ink' },
+          { k: 'bajo',  l: 'Bajo el mínimo',       n: items.filter(i => estadoDeStock(i) === 'bajo').length,  clase: 'text-state-warn' },
+          { k: 'sin',   l: 'Sin stock',            n: items.filter(i => estadoDeStock(i) === 'sin').length,   clase: 'text-state-danger' },
+          { k: 'sobre', l: 'Sobre el máximo',      n: items.filter(i => estadoDeStock(i) === 'sobre').length, clase: 'text-state-ok' },
+          { k: 'vence', l: 'Vencen en 30 días',    n: items.filter(venceProximo).length,                      clase: 'text-state-info' },
+        ] as const).map(({ k, l, n, clase }) => {
+          const activo = filtroEstado === k
+          return (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setFiltroEstado(activo ? 'todos' : k)}
+              aria-pressed={activo}
+              data-tip={k === 'todos' ? 'Quitar el filtro y ver todo el catálogo' : `Ver solo los artículos en estado "${l}"`}
+              className={`text-left rounded-[--radius-card] p-3 border transition-colors duration-[--dur-fast]
+                focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus
+                ${activo
+                  ? 'bg-accent-soft border-accent'
+                  : 'bg-paper-2 border-rule hover:border-rule-strong'}`}
+            >
+              <div className="text-[length:--text-xs] uppercase tracking-widest font-bold text-ink-3">{l}</div>
+              <div className={`text-2xl font-black mt-1 tabular-nums ${n > 0 ? clase : 'text-ink-3'}`}>{n}</div>
+            </button>
+          )
+        })}
+      </div>
+
+      {filtroEstado !== 'todos' && (
+        <div className="flex items-center gap-3 text-[length:--text-sm]">
+          <span className="text-ink-2">
+            Mostrando solo <b className="text-ink">{PINTA_ESTADO[filtroEstado].etiqueta.toLowerCase()}</b>
+            {' '}· {filteredItems.length} de {items.length} artículos
+          </span>
+          <button
+            type="button"
+            onClick={() => setFiltroEstado('todos')}
+            className="font-bold uppercase tracking-wide text-[length:--text-xs] text-accent hover:underline"
+          >
+            Ver todos
+          </button>
         </div>
       )}
 
@@ -424,24 +497,47 @@ export default function ItemsPage({ role }: { role: string | null }) {
                 <th className="px-5 py-4 font-bold">Artículo</th>
                 <th className="px-5 py-4 font-bold">Categoría</th>
                 <th className="px-5 py-4 font-bold">Unidad</th>
-                <th className="px-5 py-4 font-bold">Ubicacion</th>
+                <th className="px-5 py-4 font-bold">Ubicación</th>
                 <th className="px-5 py-4 font-bold">Vence</th>
                 <th className="px-5 py-4 font-bold text-right">Stock</th>
                 <th className="px-5 py-4 font-bold text-right">Mínimo</th>
+                <th className="px-5 py-4 font-bold">Estado</th>
                 {isAdminOrSupervisor && <th className="px-5 py-4 font-bold text-right">Opciones</th>}
               </tr>
             </thead>
             <tbody>
-              {filteredItems.map((it) => (
+              {filteredItems.map((it) => {
+                const estado = estadoDeStock(it)
+                const vence = venceProximo(it)
+                // El estado de stock manda sobre el vencimiento: un artículo en
+                // cero ya frena una entrega hoy, que venza pronto es posterior.
+                const marca = estado !== 'normal' ? PINTA_ESTADO[estado] : vence ? PINTA_ESTADO.vence : null
+                return (
                 <tr key={it.id} className="border-t border-rule hover:bg-paper-3 transition-colors">
                   <td className="px-5 py-4 font-bold text-accent">{it.code}</td>
                   <td className="px-5 py-4 font-semibold text-ink">{it.name}</td>
                   <td className="px-5 py-4 text-ink-2">{it.category || '-'}</td>
                   <td className="px-5 py-4 text-ink-2 font-medium">{it.unit}</td>
                   <td className="px-5 py-4 text-ink-2">{it.location || '-'}</td>
-                  <td className="px-5 py-4 text-ink-2">{it.expiry_date ? new Date(it.expiry_date).toLocaleDateString() : '-'}</td>
-                  <td className="px-5 py-4 text-right font-black text-accent text-base tabular-nums">{formatNumero(it.stock_actual)}</td>
+                  <td className={`px-5 py-4 ${vence ? 'text-state-info font-semibold' : 'text-ink-2'}`}>
+                    {it.expiry_date ? new Date(it.expiry_date).toLocaleDateString('es-AR') : '-'}
+                  </td>
+                  <td className={`px-5 py-4 text-right font-black text-base tabular-nums ${marca ? marca.clase : 'text-ink'}`}>
+                    {formatNumero(it.stock_actual)}
+                  </td>
                   <td className="px-5 py-4 text-right text-ink-3 font-semibold tabular-nums">{formatNumero(it.stock_minimo)}</td>
+                  <td className="px-5 py-4">
+                    {/* El color solo no alcanza: quien no distingue rojo de ámbar
+                        necesita leer el estado, y con la tabla en blanco y negro
+                        tampoco se ve. Por eso va el texto además del color. */}
+                    {marca ? (
+                      <span className={`inline-flex items-center gap-1.5 font-bold text-[length:--text-xs] uppercase tracking-wide ${marca.clase}`}>
+                        <span aria-hidden="true">●</span>{marca.etiqueta}
+                      </span>
+                    ) : (
+                      <span className="text-ink-3 text-[length:--text-xs]">—</span>
+                    )}
+                  </td>
                   {isAdminOrSupervisor && (
                     <td className="px-5 py-4 text-right">
                       {it.stock_actual === 0 && (
@@ -457,7 +553,8 @@ export default function ItemsPage({ role }: { role: string | null }) {
                     </td>
                   )}
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -544,7 +641,7 @@ export default function ItemsPage({ role }: { role: string | null }) {
                 onChange={e => setIngresoData({ ...ingresoData, item_id: e.target.value })}
                 className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:ring-focus focus:border-focus outline-none"
               >
-                <option value="" disabled>Seleccionar un artículo</option>
+                <option value="" disabled>Selecciónar un artículo</option>
                 {items.map(it => (
                   <option key={it.id} value={it.id}>{it.code} - {it.name} (Disp: {it.stock_actual})</option>
                 ))}
@@ -598,7 +695,7 @@ export default function ItemsPage({ role }: { role: string | null }) {
               </datalist>
             </label>
             <label className="block">
-              <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Remito / Observaciones</span>
+              <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Remito / Observaciónes</span>
               <input
                 value={ingresoData.notes}
                 onChange={e => setIngresoData({ ...ingresoData, notes: e.target.value })}
@@ -644,7 +741,7 @@ export default function ItemsPage({ role }: { role: string | null }) {
                 onChange={e => setEgresoData({ ...egresoData, item_id: e.target.value })}
                 className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:ring-focus focus:border-focus outline-none"
               >
-                <option value="" disabled>Seleccionar un artículo</option>
+                <option value="" disabled>Selecciónar un artículo</option>
                 {items.map(it => (
                   <option key={it.id} value={it.id}>{it.code} - {it.name} (Disp: {it.stock_actual})</option>
                 ))}
@@ -686,7 +783,7 @@ export default function ItemsPage({ role }: { role: string | null }) {
               />
             </label>
             <label className="block">
-              <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Observaciones</span>
+              <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Observaciónes</span>
               <input
                 value={egresoData.notes}
                 onChange={e => setEgresoData({ ...egresoData, notes: e.target.value })}

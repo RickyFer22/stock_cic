@@ -25,7 +25,7 @@ export function formatCantidad(n: number): string {
 /** Prefijo que deja stockCicService en counterparty al registrar egresos automáticos. */
 export const ORIGEN_ACCION_SOCIAL = 'Acción Social'
 
-export function esMovimientoAutomatico(counterparty: string | null | undefined): boolean {
+export function esMovimientoAutomático(counterparty: string | null | undefined): boolean {
   return (counterparty || '').startsWith(ORIGEN_ACCION_SOCIAL)
 }
 

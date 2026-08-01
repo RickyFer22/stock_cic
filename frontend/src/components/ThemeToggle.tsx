@@ -19,10 +19,22 @@ export default function ThemeToggle() {
     return guardado === 'claro' || guardado === 'oscuro' ? guardado : 'sistema'
   })
 
+  /**
+   * El estado se guarda en español, pero el atributo tiene que ir en inglés:
+   * tokens.css define :root[data-theme="dark"] y [data-theme="light"].
+   *
+   * Antes se estampaba el valor del estado tal cual —data-theme="oscuro"—, que
+   * no coincide con ninguna regla. El atributo quedaba puesto y la hoja de
+   * estilos lo ignoraba, así que el tema seguía saliendo de prefers-color-scheme
+   * y el interruptor no hacía absolutamente nada. Se veía "correcto" al
+   * inspeccionar el DOM, que es lo que lo hizo difícil de encontrar.
+   */
+  const ATRIBUTO: Record<Exclude<Tema, 'sistema'>, string> = { claro: 'light', oscuro: 'dark' }
+
   useEffect(() => {
     const raiz = document.documentElement
     if (tema === 'sistema') raiz.removeAttribute('data-theme')
-    else raiz.setAttribute('data-theme', tema)
+    else raiz.setAttribute('data-theme', ATRIBUTO[tema])
     localStorage.setItem(CLAVE, tema)
   }, [tema])
 

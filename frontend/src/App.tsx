@@ -208,7 +208,7 @@ export default function App() {
     )
   }
 
-  if (!me) return <EmptyState message="Cargando" sub="Verificando sesion..." icon="⏳" />
+  if (!me) return <EmptyState message="Cargando" sub="Verificando sesión..." icon="⏳" />
 
   return (
     <Shell
@@ -264,7 +264,7 @@ export default function App() {
         <div className={`grid gap-1.5 ${canOpenSupervisor ? 'grid-cols-5' : 'grid-cols-4'}`}>
           {([
             ['distributions', 'Egresos'],
-            ['items', 'Articulos'],
+            ['items', 'Artículos'],
             ['movements', 'Movim.'],
             ['soporte', 'Soporte'],
             ...(canOpenSupervisor ? [['supervisor', 'Superv.'] as [Tab, string]] : []),

@@ -15,13 +15,13 @@ const HELP_BY_TAB: Record<Tab, { title: string; steps: string[] }> = {
     steps: [
       'Toca "+ Registrar egreso" para abrir el formulario.',
       'Carga destino, tipo y articulos con sus cantidades.',
-      'Confirma y revisa el listado para validar fecha, operador y observaciones.',
+      'Confirma y revisa el listado para validar fecha, operador y observaciónes.',
     ],
   },
   items: {
-    title: 'Como usar Articulos',
+    title: 'Como usar Artículos',
     steps: [
-      'Usa "+ Nuevo item" para crear un articulo con codigo unico.',
+      'Usa "+ Nuevo item" para crear un articulo con código único.',
       'Usa "+ Ingresar stock" y "- Egresar stock" para mover inventario.',
       'Filtra por texto y exporta reportes para control mensual.',
     ],
@@ -31,7 +31,7 @@ const HELP_BY_TAB: Record<Tab, { title: string; steps: string[] }> = {
     steps: [
       'Aplica filtros por tipo y texto para encontrar registros rapido.',
       'Verifica columna tipo y cantidades para detectar errores de carga.',
-      'Si algo no coincide, revisa en Egresos o Articulos el movimiento origen.',
+      'Si algo no coincide, revisa en Egresos o Artículos el movimiento origen.',
     ],
   },
   supervisor: {
@@ -87,7 +87,7 @@ export default function HelpPanel({ open, onClose, currentTab, showSupervisorHel
           <div className="rounded-[--radius-card] border border-state-warn/25 bg-state-warn-bg px-4 py-3">
             <p className="text-xs font-bold uppercase tracking-wider text-state-warn">Modulos disponibles</p>
             <div className="mt-2 text-sm text-ink-2 leading-relaxed">
-              Egresos, Articulos y Movimientos para todos los roles.
+              Egresos, Artículos y Movimientos para todos los roles.
               {showSupervisorHelp ? ' Supervisor habilitado para admin y supervisor.' : ' Supervisor solo para roles con permiso.'}
             </div>
           </div>

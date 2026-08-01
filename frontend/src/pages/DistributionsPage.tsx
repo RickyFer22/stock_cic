@@ -4,7 +4,7 @@ import HowToCard from '../components/HowToCard'
 import Modal from '../components/Modal'
 import Banner, { type Feedback } from '../components/Banner'
 import { apiDownload, apiGet, apiPost } from '../api/client'
-import { esMovimientoAutomatico, formatFecha, formatNumero, MOVEMENT_TYPE_LABEL } from '../lib/format'
+import { esMovimientoAutomático, formatFecha, formatNumero, MOVEMENT_TYPE_LABEL } from '../lib/format'
 
 type Pagination = { page: number; limit: number; total: number; totalPages: number }
 
@@ -49,7 +49,7 @@ export default function DistributionsPage() {
   const [formError, setFormError] = useState<string | null>(null)
   const [destination, setDestination] = useState('')
   const [movementType, setMovementType] = useState('delivery')
-  const [observaciones, setObservaciones] = useState('')
+  const [observaciónes, setObservaciónes] = useState('')
   
   // Available items for selection
   const [availableItems, setAvailableItems] = useState<Array<{id:string, name:string, stock_actual:number, unit:string}>>([])
@@ -58,7 +58,7 @@ export default function DistributionsPage() {
 
   // Se pagina contra la API. Antes se pedia limit=100 sin paginar: pasados los 100
   // egresos los mas viejos desaparecian de la pantalla sin ningun aviso, y ahora
-  // que Accion Social genera egresos automaticos ese techo se alcanza rapido.
+  // que Acción Social genera egresos automáticos ese techo se alcanza rapido.
   async function loadDistributions(pagina = page) {
     setLoading(true)
     try {
@@ -113,7 +113,7 @@ export default function DistributionsPage() {
       await apiPost('/api/stock/outbound', {
         destination,
         movement_type: movementType,
-        notes: observaciones || undefined,
+        notes: observaciónes || undefined,
         items: selectedItems.map(it => ({ item_id: it.item_id, quantity: it.quantity }))
       })
       setShowForm(false)
@@ -123,7 +123,7 @@ export default function DistributionsPage() {
       setDestination('')
       setMovementType('delivery')
       setSelectedItems([])
-      setObservaciones('')
+      setObservaciónes('')
     } catch (err: any) {
       setFormError(err.message || 'Error registrando egreso')
     } finally {
@@ -205,12 +205,12 @@ export default function DistributionsPage() {
       {header}
       <Banner feedback={feedback} onDismiss={() => setFeedback(null)} />
       <HowToCard
-        title="Guia rapida de egresos"
+        title="Guía rápida de egresos"
         steps={[
           'Paso 1: toca "+ Registrar egreso".',
           'Paso 2: completa tipo, destino y articulos.',
           'Paso 3: confirma y revisa el detalle tocando una fila.',
-          'Los egresos marcados "Automatico" los genera Accion Social al registrar una asistencia.',
+          'Los egresos marcados "Automático" los genera Acción Social al registrar una asistencia.',
         ]}
       />
 
@@ -268,7 +268,7 @@ export default function DistributionsPage() {
                   <td className="px-5 py-4 text-ink-2 font-semibold">
                     {r.counterparty || <span className="text-ink-3 font-normal">Sin destino</span>}
                     {r.notes && <span className="text-ink-3 font-normal ml-2">{r.notes}</span>}
-                    {esMovimientoAutomatico(r.counterparty) && (
+                    {esMovimientoAutomático(r.counterparty) && (
                       <span className="block mt-1 text-[10px] uppercase font-black tracking-widest text-state-info">
                         Automático · Acción Social
                       </span>
@@ -422,7 +422,7 @@ export default function DistributionsPage() {
                    onChange={(event) => setPendingItemId(event.target.value)}
                    className="flex-1 rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:outline-focus focus:border-focus outline-none"
                  >
-                    <option value="">-- Seleccionar artículo --</option>
+                    <option value="">-- Selecciónar artículo --</option>
                     {availableItems.filter(i => !selectedItems.find(s => s.item_id === i.id)).map(i => (
                       <option key={i.id} value={i.id}>{i.name} ({i.stock_actual} disp.)</option>
                     ))}
@@ -483,10 +483,10 @@ export default function DistributionsPage() {
             </div>
 
             <label className="block px-1">
-              <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Observaciones (Opcional)</span>
+              <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Observaciónes (Opcional)</span>
               <input
-                value={observaciones}
-                onChange={e => setObservaciones(e.target.value)}
+                value={observaciónes}
+                onChange={e => setObservaciónes(e.target.value)}
                 className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:outline-focus focus:border-focus outline-none"
                 placeholder="Motivo de la entrega o nota adicional..."
               />

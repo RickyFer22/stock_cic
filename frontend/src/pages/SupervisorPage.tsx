@@ -162,7 +162,7 @@ export default function SupervisorPage({ role }: { role: 'admin' | 'supervisor' 
         )}
       </div>
       <HowToCard
-        title="Guia rapida de supervisor"
+        title="Guía rápida de supervisor"
         steps={[
           'Paso 1: revisa metricas y alertas para detectar riesgos de stock.',
           'Paso 2: valida actividad de movimientos recientes.',
@@ -266,11 +266,11 @@ export default function SupervisorPage({ role }: { role: 'admin' | 'supervisor' 
                 <div key={item.id} className="flex items-center justify-between p-3 bg-state-warn-bg rounded-xl border border-state-warn-bg">
                   <div>
                     <div className="font-bold text-ink-2 text-sm">{item.name}</div>
-                    <div className="text-xs text-ink-3">{item.code} • {item.category}</div>
+                    <div className="text-xs text-ink-2">{item.code} • {item.category}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-black text-state-warn">{item.stock_actual}</div>
-                    <div className="text-xs text-ink-3">mín: {item.stock_minimo}</div>
+                    <div className="text-xs text-ink-2">mín: {item.stock_minimo}</div>
                   </div>
                 </div>
               ))}

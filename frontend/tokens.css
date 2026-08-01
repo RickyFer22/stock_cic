@@ -17,7 +17,7 @@
 
   --color-ink:          oklch(22%   0.020 155);
   --color-ink-2:        oklch(42%   0.015 155);
-  --color-ink-3:        oklch(55%   0.012 155);
+  --color-ink-3:        oklch(51%   0.012 155);  /* 4.87:1 sobre paper-3, el peor caso */
 
   --color-rule:         oklch(89%   0.008 155);
   --color-rule-strong:  oklch(82%   0.010 155);
@@ -104,7 +104,7 @@
 
     --color-ink:          oklch(94% 0.008 155);
     --color-ink-2:        oklch(78% 0.010 155);
-    --color-ink-3:        oklch(62% 0.012 155);
+    --color-ink-3:        oklch(64% 0.012 155);  /* 4.74:1 sobre paper-3, el peor caso */
 
     --color-rule:         oklch(30% 0.014 155);
     --color-rule-strong:  oklch(38% 0.016 155);
@@ -137,7 +137,7 @@
   --color-paper-3:      oklch(25% 0.016 155);
   --color-ink:          oklch(94% 0.008 155);
   --color-ink-2:        oklch(78% 0.010 155);
-  --color-ink-3:        oklch(62% 0.012 155);
+  --color-ink-3:        oklch(64% 0.012 155);  /* 4.74:1 sobre paper-3, el peor caso */
   --color-rule:         oklch(30% 0.014 155);
   --color-rule-strong:  oklch(38% 0.016 155);
   --color-accent:        oklch(75% 0.150 153);
@@ -163,7 +163,7 @@
   --color-paper-3:      oklch(94.5% 0.008 155);
   --color-ink:          oklch(22%   0.020 155);
   --color-ink-2:        oklch(42%   0.015 155);
-  --color-ink-3:        oklch(55%   0.012 155);
+  --color-ink-3:        oklch(51%   0.012 155);  /* 4.87:1 sobre paper-3, el peor caso */
   --color-rule:         oklch(89%   0.008 155);
   --color-rule-strong:  oklch(82%   0.010 155);
   --color-accent:        oklch(48%   0.110 154);

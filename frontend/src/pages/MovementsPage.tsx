@@ -44,7 +44,7 @@ function formatFecha(iso: string) {
   return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`
 }
 
-function esAutomatico(row: MovementRow) {
+function esAutomático(row: MovementRow) {
   return (row.counterparty || '').startsWith(ORIGEN_ACCION_SOCIAL)
 }
 
@@ -59,7 +59,7 @@ export default function MovementsPage() {
   const [kindFilter, setKindFilter] = useState<KindFilter>('all')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
-  const [soloAutomaticos, setSoloAutomaticos] = useState(false)
+  const [soloAutomáticos, setSoloAutomáticos] = useState(false)
   const [page, setPage] = useState(1)
 
   // Los filtros de tipo y fecha viajan a la API: filtrarlos en el cliente solo
@@ -97,12 +97,12 @@ export default function MovementsPage() {
   const visibleRows = useMemo(() => {
     const needle = search.trim().toLowerCase()
     return rows.filter((row) => {
-      if (soloAutomaticos && !esAutomatico(row)) return false
+      if (soloAutomáticos && !esAutomático(row)) return false
       if (!needle) return true
       return [row.code, row.item_name, row.operador, row.counterparty ?? '', row.notes ?? '']
         .some((value) => String(value).toLowerCase().includes(needle))
     })
-  }, [rows, search, soloAutomaticos])
+  }, [rows, search, soloAutomáticos])
 
   async function handleExport() {
     setDownloading(true)
@@ -142,11 +142,11 @@ export default function MovementsPage() {
       </div>
 
       <HowToCard
-        title="Guia rapida de movimientos"
+        title="Guía rápida de movimientos"
         steps={[
           'Paso 1: acota por tipo y rango de fechas; los filtros se aplican sobre todo el historial.',
           'Paso 2: busca por codigo, articulo, operador, origen/destino o nota.',
-          'Paso 3: usa "Solo automaticos" para conciliar los egresos que llegan de Accion Social.',
+          'Paso 3: usa "Solo automáticos" para conciliar los egresos que llegan de Acción Social.',
         ]}
       />
 
@@ -191,15 +191,15 @@ export default function MovementsPage() {
           <label className="flex items-center gap-2 text-sm text-ink-2 font-semibold cursor-pointer">
             <input
               type="checkbox"
-              checked={soloAutomaticos}
-              onChange={(event) => setSoloAutomaticos(event.target.checked)}
+              checked={soloAutomáticos}
+              onChange={(event) => setSoloAutomáticos(event.target.checked)}
               className="h-4 w-4 rounded border-rule accent-[--color-accent]"
             />
             Solo automáticos (Acción Social)
           </label>
-          {(from || to || kindFilter !== 'all' || soloAutomaticos || search) && (
+          {(from || to || kindFilter !== 'all' || soloAutomáticos || search) && (
             <button
-              onClick={() => { setFrom(''); setTo(''); setKindFilter('all'); setSoloAutomaticos(false); setSearch('') }}
+              onClick={() => { setFrom(''); setTo(''); setKindFilter('all'); setSoloAutomáticos(false); setSearch('') }}
               className="md:ml-auto text-sm font-bold text-ink-3 hover:text-ink underline underline-offset-2"
             >
               Limpiar filtros
@@ -259,7 +259,7 @@ export default function MovementsPage() {
                     </td>
                     <td className="px-5 py-4 text-ink-2 font-medium">
                       {r.counterparty || <span className="text-ink-3">—</span>}
-                      {esAutomatico(r) && (
+                      {esAutomático(r) && (
                         <span className="block mt-1 text-[10px] uppercase font-black tracking-widest text-state-info">
                           Automático
                         </span>
@@ -276,7 +276,7 @@ export default function MovementsPage() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-rule bg-paper-2">
             <span className="text-xs font-semibold text-ink-3 uppercase tracking-wider">
               Mostrando {desde}–{hasta} de {total}
-              {search || soloAutomaticos ? ` · ${visibleRows.length} en pantalla tras filtrar` : ''}
+              {search || soloAutomáticos ? ` · ${visibleRows.length} en pantalla tras filtrar` : ''}
             </span>
             <div className="flex items-center gap-2">
               <button

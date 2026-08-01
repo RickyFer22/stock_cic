@@ -8,6 +8,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
+    <script>
+      /* El tema elegido se aplica antes de pintar. Si esperara a que monte
+         React, quien tiene "Oscuro" guardado vería un destello blanco en cada
+         carga. Va en linea y sin depender del bundle por eso mismo.
+         Los valores del atributo son en ingles porque asi los define tokens.css;
+         el estado guardado es en español. */
+      try {
+        var t = localStorage.getItem('stockcic:tema');
+        if (t === 'oscuro') document.documentElement.setAttribute('data-theme', 'dark');
+        else if (t === 'claro') document.documentElement.setAttribute('data-theme', 'light');
+      } catch (e) { /* modo privado sin almacenamiento: manda el sistema */ }
+    </script>
   </head>
   <!-- Sin bg-slate-50 ni text-slate-900: eran utilidades fijas que ganaban sobre
        los tokens y dejaban el tema oscuro sin efecto sobre el fondo de página.
