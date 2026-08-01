@@ -82,10 +82,12 @@ apiRouter.get('/export/movements.xlsx', requireRole('admin', 'supervisor'), exce
 apiRouter.get('/export/inventory-health.xlsx', requireRole('admin', 'supervisor', 'operador'), excelController.exportInventoryHealth.bind(excelController))
 
 // Soporte Técnico
+apiRouter.get('/support/meta', supportController.meta.bind(supportController))
 apiRouter.get('/support', supportController.list.bind(supportController))
 apiRouter.post('/support', supportController.create.bind(supportController))
-// Responder: lo permite el autor de la consulta y soporte. La autorizacion fina
-// se resuelve en el controlador porque depende de quien creo el ticket.
+// El detalle, los mensajes y la actualizacion resuelven la autorizacion en el
+// controlador: dependen de quien creo la consulta, no solo del rol. El autor
+// puede leer y responder la suya, y reabrirla si fue resuelta o cerrada.
+apiRouter.get('/support/:id', supportController.getOne.bind(supportController))
 apiRouter.post('/support/:id/mensajes', supportController.addMessage.bind(supportController))
-// Cambiar estado: solo soporte.
-apiRouter.put('/support/:id', requireRole('admin', 'supervisor'), supportController.update.bind(supportController))
+apiRouter.put('/support/:id', supportController.update.bind(supportController))

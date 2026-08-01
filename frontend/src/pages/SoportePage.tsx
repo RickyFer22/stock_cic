@@ -1,300 +1,537 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { apiGet, apiPost, apiPut } from '../api/client'
 import EmptyState from '../components/EmptyState'
 import Modal from '../components/Modal'
 import Banner, { type Feedback } from '../components/Banner'
+import ConfirmDialog from '../components/ConfirmDialog'
+import { Badge, Button, Card, Label, PageHeader, Pager } from '../components/ui'
 import { formatFecha } from '../lib/format'
 
-export default function SoportePage({ role }: { role: string | null }) {
-  // La base solo admite admin, supervisor y operador (schema.sql). 'administrator'
-  // era una comprobacion que nunca podia cumplirse.
-  const isSoporte = role === 'admin' || role === 'supervisor'
+/**
+ * Bandeja de soporte. Reemplaza al listado anterior, que traía la tabla completa
+ * sin filtros ni paginación y mostraba a cada persona las consultas de todo el
+ * personal.
+ */
 
-  const [tickets, setTickets] = useState<any[]>([])
+type Ticket = {
+  id: string
+  numero: number
+  titulo: string
+  consulta: string
+  estado: string
+  prioridad: string
+  categoria: string
+  created_at: string
+  updated_at: string
+  vence_en: string | null
+  primera_respuesta_en: string | null
+  asignado_a: string | null
+  solicitante: string
+  responsable: string | null
+}
+
+type Mensaje = { id: string; cuerpo: string; visibilidad: string; created_at: string; autor: string | null }
+type Evento = { tipo: string; valor_anterior: string | null; valor_nuevo: string | null; created_at: string; actor: string | null }
+type Detalle = Ticket & { mensajes: Mensaje[]; eventos: Evento[]; user_id: string }
+
+const PAGE_SIZE = 25
+
+const TONO_ESTADO: Record<string, 'ok' | 'warn' | 'danger' | 'info' | 'neutral'> = {
+  'Sin asignar': 'warn',
+  'En análisis': 'info',
+  'Pendiente de información': 'warn',
+  'En proceso': 'info',
+  'Resuelto': 'ok',
+  'Cerrado': 'neutral',
+  'Reabierto': 'danger',
+}
+
+const TONO_PRIORIDAD: Record<string, 'ok' | 'warn' | 'danger' | 'info' | 'neutral'> = {
+  'Baja': 'neutral',
+  'Normal': 'info',
+  'Alta': 'warn',
+  'Crítica': 'danger',
+}
+
+/** Vencida = se comprometió una primera respuesta que todavía no ocurrió. */
+function estaVencida(t: Ticket): boolean {
+  return !t.primera_respuesta_en && !!t.vence_en && new Date(t.vence_en) < new Date()
+}
+
+function tiempoRelativo(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime()
+  const horas = Math.floor(ms / 3600_000)
+  if (horas < 1) return 'hace minutos'
+  if (horas < 24) return `hace ${horas} h`
+  const dias = Math.floor(horas / 24)
+  return dias === 1 ? 'hace 1 día' : `hace ${dias} días`
+}
+
+const TEXTO_EVENTO: Record<string, string> = {
+  creacion: 'abrió la consulta',
+  estado: 'cambió el estado',
+  prioridad: 'cambió la prioridad',
+  asignacion: 'cambió el responsable',
+}
+
+export default function SoportePage({ role }: { role: string | null }) {
+  // La base solo admite admin, supervisor y operador: 'administrator' era una
+  // comprobación que nunca podía cumplirse.
+  const esSoporte = role === 'admin' || role === 'supervisor'
+
+  const [tickets, setTickets] = useState<Ticket[]>([])
+  const [contadores, setContadores] = useState<Record<string, number>>({})
+  const [total, setTotal] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
-  const [showNewForm, setShowNewForm] = useState(false)
-  const [newConsulta, setNewConsulta] = useState('')
-  const [creating, setCreating] = useState(false)
-  const [viewTicket, setViewTicket] = useState<any>(null)
-  const [messages, setMessages] = useState<any[]>([])
-  const [newMessage, setNewMessage] = useState('')
-  const [sendingMessage, setSendingMessage] = useState(false)
   const [feedback, setFeedback] = useState<Feedback>(null)
 
-  useEffect(() => { loadTickets() }, [])
+  const [vista, setVista] = useState('abiertos')
+  const [estado, setEstado] = useState('todos')
+  const [prioridad, setPrioridad] = useState('todas')
+  const [q, setQ] = useState('')
 
-  const loadTickets = async () => {
+  const [meta, setMeta] = useState<{ estados: string[]; prioridades: string[]; categorias: string[] }>({
+    estados: [], prioridades: [], categorias: [],
+  })
+
+  const [showNew, setShowNew] = useState(false)
+  const [nuevo, setNuevo] = useState({ titulo: '', categoria: '', consulta: '' })
+  const [creating, setCreating] = useState(false)
+
+  const [detalle, setDetalle] = useState<Detalle | null>(null)
+  const [abriendo, setAbriendo] = useState(false)
+  const [respuesta, setRespuesta] = useState('')
+  const [esNotaInterna, setEsNotaInterna] = useState(false)
+  const [enviando, setEnviando] = useState(false)
+  const [confirmarCierre, setConfirmarCierre] = useState(false)
+
+  useEffect(() => {
+    apiGet<{ data: typeof meta }>('/api/support/meta').then(r => setMeta(r.data)).catch(() => {})
+  }, [])
+
+  const cargar = useCallback(async () => {
+    setLoading(true)
     try {
-      setLoading(true)
-      const res = await apiGet<{ data: any[] }>('/api/support')
-      setTickets(res.data || [])
+      const params = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) })
+      if (vista === 'sin_asignar') params.set('asignado', 'sin_asignar')
+      else if (vista === 'mios') params.set('asignado', 'mios')
+      else params.set('vista', vista)
+      if (estado !== 'todos') params.set('estado', estado)
+      if (prioridad !== 'todas') params.set('prioridad', prioridad)
+      if (q.trim()) params.set('q', q.trim())
+
+      const r = await apiGet<any>(`/api/support?${params}`)
+      setTickets(r.data)
+      setTotal(r.pagination.total)
+      setTotalPages(r.pagination.totalPages)
+      setContadores(r.contadores || {})
     } catch (err: any) {
-      setFeedback({ tone: 'error', text: err.message || 'No se pudieron cargar los tickets.' })
+      setFeedback({ tone: 'error', text: err.message || 'No se pudieron cargar las consultas.' })
     } finally {
       setLoading(false)
     }
+  }, [page, vista, estado, prioridad, q])
+
+  useEffect(() => { cargar() }, [cargar])
+  useEffect(() => { setPage(1) }, [vista, estado, prioridad, q])
+
+  async function abrirDetalle(id: string) {
+    setAbriendo(true)
+    try {
+      const r = await apiGet<{ data: Detalle }>(`/api/support/${id}`)
+      setDetalle(r.data)
+    } catch (err: any) {
+      setFeedback({ tone: 'error', text: err.message || 'No se pudo abrir la consulta.' })
+      setDetalle(null)
+    } finally {
+      setAbriendo(false)
+    }
   }
 
-  const handleCreate = async () => {
-    if (!newConsulta.trim()) return setFeedback({ tone: 'error', text: 'Escribí tu consulta antes de enviarla.' })
+  async function crear() {
+    if (!nuevo.titulo.trim()) return setFeedback({ tone: 'error', text: 'Poné un título breve para la consulta.' })
+    if (nuevo.consulta.trim().length < 15) return setFeedback({ tone: 'error', text: 'Contanos un poco más: la descripción necesita al menos 15 caracteres.' })
+    setCreating(true)
     try {
-      setCreating(true)
-      await apiPost('/api/support', { consulta: newConsulta })
-      setFeedback({ tone: 'success', text: 'Ticket creado. El área de Sistemas va a responderte por acá.' })
-      setNewConsulta('')
-      setShowNewForm(false)
-      loadTickets()
+      const r = await apiPost<{ data: Ticket }>('/api/support', nuevo)
+      setShowNew(false)
+      setNuevo({ titulo: '', categoria: '', consulta: '' })
+      setFeedback({ tone: 'success', text: `Consulta #${String(r.data.numero).padStart(4, '0')} enviada. Te vamos a responder por acá.` })
+      cargar()
     } catch (err: any) {
-      setFeedback({ tone: 'error', text: err.message || 'No se pudo crear el ticket.' })
+      setFeedback({ tone: 'error', text: err.message || 'No pudimos enviar la consulta. Lo que escribiste se conserva.' })
     } finally {
       setCreating(false)
     }
   }
 
-  const handleView = (ticket: any) => {
-    setViewTicket(ticket)
-    setMessages(ticket.respuestas || [])
-  }
-
-  // El servidor agrega el mensaje al hilo y devuelve el ticket actualizado. Antes
-  // se enviaba el arreglo completo desde esta copia local, que podia estar vieja:
-  // dos personas respondiendo a la vez se pisaban el mensaje.
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !viewTicket) return
+  async function enviarMensaje() {
+    if (!respuesta.trim() || !detalle) return
+    setEnviando(true)
     try {
-      setSendingMessage(true)
-      const res = await apiPost<{ data: any }>(`/api/support/${viewTicket.id}/mensajes`, { mensaje: newMessage })
-      setNewMessage('')
-      setMessages(res.data.respuestas || [])
-      setViewTicket({ ...viewTicket, ...res.data })
-      loadTickets()
+      await apiPost(`/api/support/${detalle.id}/mensajes`, {
+        cuerpo: respuesta,
+        visibilidad: esNotaInterna ? 'interna' : 'visible',
+      })
+      setRespuesta('')
+      setEsNotaInterna(false)
+      await abrirDetalle(detalle.id)
+      cargar()
     } catch (err: any) {
       setFeedback({ tone: 'error', text: err.message || 'No se pudo enviar el mensaje.' })
     } finally {
-      setSendingMessage(false)
+      setEnviando(false)
     }
   }
 
-  const handleEstado = async (ticketId: string, estado: string) => {
+  async function actualizar(cambios: Record<string, any>, aviso: string) {
+    if (!detalle) return
     try {
-      await apiPut(`/api/support/${ticketId}`, { estado })
-      setFeedback({ tone: 'success', text: 'Estado del ticket actualizado.' })
-      loadTickets()
-      if (viewTicket?.id === ticketId) setViewTicket({ ...viewTicket, estado })
+      await apiPut(`/api/support/${detalle.id}`, cambios)
+      await abrirDetalle(detalle.id)
+      cargar()
+      setFeedback({ tone: 'success', text: aviso })
     } catch (err: any) {
-      setFeedback({ tone: 'error', text: err.message || 'No se pudo cambiar el estado.' })
+      setFeedback({ tone: 'error', text: err.message || 'No se pudo actualizar la consulta.' })
     }
   }
 
-  // Formato compartido con Movimientos y Egresos: antes esta pantalla usaba
-  // toLocaleDateString por su cuenta y las fechas no coincidian entre modulos.
-  const fmtDate = formatFecha
+  const VISTAS = esSoporte
+    ? [
+        { k: 'abiertos', l: 'Abiertas' },
+        { k: 'sin_asignar', l: 'Sin asignar' },
+        { k: 'mios', l: 'Asignadas a mí' },
+        { k: 'vencidos', l: 'Vencidas' },
+        { k: 'todos', l: 'Todas' },
+      ]
+    : [
+        { k: 'abiertos', l: 'Abiertas' },
+        { k: 'todos', l: 'Todas' },
+      ]
 
-  const estadoColor: any = {
-    Pendiente: 'bg-amber-100 text-amber-700 border-amber-200',
-    'En Proceso': 'bg-blue-100 text-blue-700 border-blue-200',
-    Resuelto: 'bg-brand-green-100 text-brand-green-700 border-brand-green-200',
-    Cerrado: 'bg-slate-100 text-slate-600 border-slate-200',
-  }
-
-  if (loading) return <EmptyState message="Cargando" sub="Obteniendo tickets..." icon="⏳" />
+  const hayFiltros = vista !== 'abiertos' || estado !== 'todos' || prioridad !== 'todas' || q.trim() !== ''
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="space-y-5">
+      <PageHeader
+        title="Soporte"
+        subtitle={esSoporte ? 'Consultas del personal sobre el sistema de stock.' : 'Escribinos si tenés un problema con el sistema.'}
+        actions={<Button variant="primary" onClick={() => setShowNew(true)}>Nueva consulta</Button>}
+      />
+
       <Banner feedback={feedback} onDismiss={() => setFeedback(null)} />
-      {/* Header */}
-      <div className="bg-gradient-to-r from-brand-green-700 via-teal-600 to-brand-green-600 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 opacity-10 pointer-events-none">
-          <svg className="w-48 h-48" fill="currentColor" viewBox="0 0 24 24"><path d="M18.364 5.636a9 9 0 010 12.728m-2.829-2.829a5 5 0 000-7.07m-4.243 1.414a2 2 0 113.536 3.536L12 14l-2.828-2.828z" /></svg>
+
+      <Card>
+        <div className="flex flex-wrap gap-2 mb-3" role="group" aria-label="Vistas rápidas">
+          {VISTAS.map(v => (
+            <button
+              key={v.k}
+              onClick={() => setVista(v.k)}
+              aria-pressed={vista === v.k}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wide border-2 transition-all
+                focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-700
+                ${vista === v.k
+                  ? 'bg-brand-green-900 text-white border-brand-green-900'
+                  : 'bg-white text-slate-600 border-slate-200 hover:border-brand-green-500'}`}
+            >
+              {v.l}
+            </button>
+          ))}
         </div>
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+
+        <div className="grid gap-3 md:grid-cols-[2fr_1fr_1fr]">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-3">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-              Soporte Técnico
-            </h1>
-            <p className="text-white/70 mt-1">Gestión de consultas y tickets de soporte (Stock CIC)</p>
+            <Label htmlFor="q-soporte">Buscar</Label>
+            <input
+              id="q-soporte"
+              value={q}
+              onChange={e => setQ(e.target.value)}
+              placeholder="Número, título o texto de la consulta"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand-green-700"
+            />
           </div>
-          <button onClick={() => setShowNewForm(true)} className="bg-white text-brand-green-700 hover:bg-brand-green-50 px-6 py-3 rounded-xl font-bold shadow-lg transition-all flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m-6 0H6" /></svg>
-            Abrir Nuevo Ticket
+          <div>
+            <Label htmlFor="estado-soporte">Estado</Label>
+            <select id="estado-soporte" value={estado} onChange={e => setEstado(e.target.value)}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold outline-none focus:border-brand-green-700">
+              <option value="todos">Todos</option>
+              {meta.estados.map(s => (
+                <option key={s} value={s}>{s}{contadores[s] ? ` (${contadores[s]})` : ''}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <Label htmlFor="prio-soporte">Prioridad</Label>
+            <select id="prio-soporte" value={prioridad} onChange={e => setPrioridad(e.target.value)}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold outline-none focus:border-brand-green-700">
+              <option value="todas">Todas</option>
+              {meta.prioridades.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {hayFiltros && (
+          <button
+            onClick={() => { setVista('abiertos'); setEstado('todos'); setPrioridad('todas'); setQ('') }}
+            className="mt-3 text-sm font-bold text-slate-500 hover:text-slate-700 underline underline-offset-2"
+          >
+            Limpiar filtros
           </button>
-        </div>
-      </div>
+        )}
+      </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Soporte Info Card */}
-        <div className="lg:col-span-1 space-y-4">
-          <div className="bg-white/80 backdrop-blur-md rounded-[2rem] border border-white/60 shadow-sm overflow-hidden">
-            <div className="bg-gradient-to-br from-brand-green-600 to-teal-700 p-5 text-white">
-              <h3 className="font-bold text-lg flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                Datos de Soporte
-              </h3>
-            </div>
-            <div className="p-5 space-y-4">
-              <div className="flex items-center gap-3 p-3 bg-brand-green-50 rounded-xl">
-                <div className="w-10 h-10 rounded-full bg-brand-green-100 flex items-center justify-center text-brand-green-600">👤</div>
-                <div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">Administrador</p>
-                  <p className="font-bold text-slate-900">Ricardo Fernández</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-teal-50 rounded-xl">
-                <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600">🏢</div>
-                <div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">Área</p>
-                  <p className="font-bold text-slate-900">Dirección de Modernización</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-brand-gold-50 rounded-xl">
-                <div className="w-10 h-10 rounded-full bg-brand-gold-100 flex items-center justify-center text-brand-gold-600">🕒</div>
-                <div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">Horario de Atención</p>
-                  <p className="font-bold text-slate-900">Lunes a Viernes: 7:00hs a 13:00hs</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Lista de Tickets */}
-        <div className="lg:col-span-2 space-y-4">
-          {tickets.length === 0 ? (
-            <div className="bg-white/80 backdrop-blur-md rounded-[2rem] border border-white/60 p-12 text-center shadow-sm">
-              <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
-              </div>
-              <h3 className="text-lg font-bold text-slate-900">{isSoporte ? 'No hay consultas abiertas' : 'Todavía no abriste ninguna consulta'}</h3>
-              <p className="text-slate-500 mt-1 text-sm">{isSoporte ? 'Cuando el personal envíe una consulta, aparece acá.' : 'Si tenés un problema con el sistema, escribinos.'}</p>
-            </div>
-          ) : (
-            <div className="grid gap-3">
-              {tickets.map(t => (
-                <div key={t.id} className="bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                  <div className="space-y-2 flex-1 min-w-0">
+      {loading ? (
+        <EmptyState icon="⏳" message="Cargando" sub="Buscando consultas…" />
+      ) : !tickets.length ? (
+        <EmptyState
+          message={hayFiltros ? 'Sin resultados' : esSoporte ? 'No hay consultas abiertas' : 'Todavía no abriste ninguna consulta'}
+          sub={hayFiltros
+            ? 'Probá con otros filtros.'
+            : esSoporte ? 'Cuando el personal envíe una consulta, aparece acá.' : 'Si tenés un problema con el sistema, escribinos.'}
+        />
+      ) : (
+        <>
+          <div className="grid gap-3">
+            {tickets.map(t => (
+              <Card key={t.id} className="hover:shadow-lg transition-shadow">
+                <div className="flex flex-col sm:flex-row gap-4 justify-between sm:items-start">
+                  <div className="min-w-0 flex-1 space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-mono bg-slate-100 text-slate-500 px-2 py-1 rounded-md border border-slate-200">#{t.id.slice(0, 8)}</span>
-                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${estadoColor[t.estado] || estadoColor['Pendiente']}`}>
-                        {t.estado}
+                      <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
+                        #{String(t.numero).padStart(4, '0')}
                       </span>
-                      <span className="text-xs text-slate-400 font-medium">{fmtDate(t.created_at)}</span>
+                      <Badge tone={TONO_ESTADO[t.estado] || 'neutral'}>{t.estado}</Badge>
+                      <Badge tone={TONO_PRIORIDAD[t.prioridad] || 'neutral'}>{t.prioridad}</Badge>
+                      {estaVencida(t) && <Badge tone="danger">Vencida</Badge>}
                     </div>
-                    <p className="text-slate-800 font-medium truncate">{t.consulta}</p>
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <span className="font-bold text-brand-green-700">👤 {t.username}</span>
-                      {t.ultimo_mensaje && (
-                        <span className="truncate">· <span className="italic text-slate-400">"{t.ultimo_mensaje}"</span></span>
-                      )}
+                    <p className="font-bold text-slate-900">{t.titulo}</p>
+                    <p className="text-sm text-slate-500">{t.consulta.slice(0, 160)}{t.consulta.length > 160 ? '…' : ''}</p>
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500">
+                      <span><b className="text-slate-600">{t.solicitante}</b></span>
+                      <span>· {t.categoria}</span>
+                      <span>· {formatFecha(t.created_at)}</span>
+                      <span>· {tiempoRelativo(t.created_at)}</span>
+                      {t.responsable && <span>· Atiende: <b className="text-slate-600">{t.responsable}</b></span>}
                     </div>
                   </div>
-                  <button onClick={() => handleView(t)} className="w-full sm:w-auto whitespace-nowrap px-4 py-2 bg-slate-50 hover:bg-brand-green-50 text-brand-green-700 font-bold border border-slate-200 hover:border-brand-green-200 rounded-xl transition-colors text-sm shadow-sm flex items-center justify-center gap-2">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                  <Button variant="secondary" onClick={() => abrirDetalle(t.id)} className="shrink-0">
                     Ver detalle
-                  </button>
+                  </Button>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+              </Card>
+            ))}
+          </div>
+          <Card padded={false}>
+            <Pager page={page} totalPages={totalPages} total={total} pageSize={PAGE_SIZE} onChange={setPage} />
+          </Card>
+        </>
+      )}
 
-      {showNewForm && (
-        <Modal title="Nueva consulta" onClose={() => setShowNewForm(false)} size="md" confirmarCierre={newConsulta.trim().length > 0}>
-          <div className="space-y-4 p-2">
+      {showNew && (
+        <Modal
+          title="Nueva consulta"
+          size="lg"
+          onClose={() => setShowNew(false)}
+          confirmarCierre={nuevo.titulo.trim().length > 0 || nuevo.consulta.trim().length > 0}
+        >
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">Descripción del problema o consulta</label>
-              <textarea
-                value={newConsulta}
-                onChange={e => setNewConsulta(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:ring-2 focus:ring-brand-green-500/20 focus:border-brand-green-500 outline-none transition-all resize-none"
-                rows={4}
-                placeholder="Ej: No puedo actualizar el stock del artículo..."
+              <Label htmlFor="n-titulo">Título</Label>
+              <input
+                id="n-titulo" value={nuevo.titulo} maxLength={120}
+                onChange={e => setNuevo(p => ({ ...p, titulo: e.target.value }))}
+                placeholder="Ej: No puedo registrar el egreso de leche"
+                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none focus:border-brand-green-700"
               />
             </div>
+            <div>
+              <Label htmlFor="n-cat">Tipo de consulta</Label>
+              <select
+                id="n-cat" value={nuevo.categoria}
+                onChange={e => setNuevo(p => ({ ...p, categoria: e.target.value }))}
+                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 font-semibold outline-none focus:border-brand-green-700"
+              >
+                <option value="">Seleccioná una opción</option>
+                {meta.categorias.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="n-desc">Contanos qué pasó</Label>
+              <textarea
+                id="n-desc" rows={5} value={nuevo.consulta}
+                onChange={e => setNuevo(p => ({ ...p, consulta: e.target.value }))}
+                placeholder="Si podés, indicá en qué pantalla ocurrió y qué esperabas que sucediera."
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-brand-green-700 resize-y"
+              />
+              <p className={`text-xs font-semibold mt-1 ${
+                nuevo.consulta.trim().length > 0 && nuevo.consulta.trim().length < 15 ? 'text-rose-600' : 'text-slate-500'
+              }`}>
+                {nuevo.consulta.trim().length > 0 && nuevo.consulta.trim().length < 15
+                  ? `Faltan ${15 - nuevo.consulta.trim().length} caracteres`
+                  : 'Cuanto más detalle, más rápido podemos resolverlo.'}
+              </p>
+            </div>
             <div className="flex justify-end gap-3 pt-2">
-              <button onClick={() => setShowNewForm(false)} className="px-5 py-2.5 rounded-xl font-bold text-slate-600 hover:bg-slate-100 transition-colors">Cancelar</button>
-              <button disabled={creating} onClick={handleCreate} className="px-5 py-2.5 rounded-xl font-bold bg-brand-green-700 text-white hover:bg-brand-green-800 transition-colors disabled:opacity-50">
-                {creating ? 'Guardando...' : 'Crear Ticket'}
-              </button>
+              <Button variant="ghost" onClick={() => setShowNew(false)}>Cancelar</Button>
+              <Button variant="primary" loading={creating} onClick={crear}>Enviar consulta</Button>
             </div>
           </div>
         </Modal>
       )}
 
-      {viewTicket && (
-        <Modal title={`Ticket #${viewTicket.id.slice(0, 8)}`} onClose={() => setViewTicket(null)} size="lg">
-          <div className="space-y-6">
-            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Consulta original</span>
-                <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${estadoColor[viewTicket.estado] || estadoColor['Pendiente']}`}>
-                  {viewTicket.estado}
-                </span>
+      {(detalle || abriendo) && (
+        <Modal
+          title={detalle ? `Consulta #${String(detalle.numero).padStart(4, '0')}` : 'Consulta'}
+          size="lg"
+          onClose={() => { setDetalle(null); setRespuesta('') }}
+          confirmarCierre={respuesta.trim().length > 0}
+        >
+          {!detalle ? (
+            <EmptyState icon="⏳" message="Cargando" sub="Abriendo la consulta…" />
+          ) : (
+            <div className="space-y-5">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge tone={TONO_ESTADO[detalle.estado] || 'neutral'}>{detalle.estado}</Badge>
+                  <Badge tone={TONO_PRIORIDAD[detalle.prioridad] || 'neutral'}>{detalle.prioridad}</Badge>
+                  {estaVencida(detalle) && <Badge tone="danger">Vencida</Badge>}
+                </div>
+                <h3 className="font-bold text-lg text-slate-900">{detalle.titulo}</h3>
+                <p className="text-slate-700 whitespace-pre-line">{detalle.consulta}</p>
+                <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-3 border-t border-slate-200">
+                  <div><dt className="text-slate-400 font-bold uppercase">Solicitante</dt><dd className="font-semibold text-slate-700">{detalle.solicitante}</dd></div>
+                  <div><dt className="text-slate-400 font-bold uppercase">Tipo</dt><dd className="font-semibold text-slate-700">{detalle.categoria}</dd></div>
+                  <div><dt className="text-slate-400 font-bold uppercase">Abierta</dt><dd className="font-semibold text-slate-700">{formatFecha(detalle.created_at)}</dd></div>
+                  <div><dt className="text-slate-400 font-bold uppercase">Atiende</dt><dd className="font-semibold text-slate-700">{detalle.responsable || 'Sin asignar'}</dd></div>
+                </dl>
               </div>
-              <p className="text-slate-800 font-medium text-lg">{viewTicket.consulta}</p>
-              <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                {fmtDate(viewTicket.created_at)} por {viewTicket.username}
-              </p>
-            </div>
 
-            {isSoporte && (
-              <div className="flex items-center gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <label className="text-sm font-bold text-slate-700 uppercase tracking-wide">Cambiar Estado:</label>
-                <select
-                  value={viewTicket.estado}
-                  onChange={(e) => handleEstado(viewTicket.id, e.target.value)}
-                  className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-bold outline-none cursor-pointer"
-                >
-                  <option value="Pendiente">Pendiente</option>
-                  <option value="En Proceso">En Proceso</option>
-                  <option value="Resuelto">Resuelto</option>
-                  <option value="Cerrado">Cerrado</option>
-                </select>
-              </div>
-            )}
-
-            <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
-              <h4 className="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center gap-2">
-                <svg className="w-5 h-5 text-brand-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-                Conversación
-              </h4>
-              {messages.length === 0 ? (
-                <p className="text-sm text-slate-500 italic text-center py-4">Aún no hay respuestas en este ticket.</p>
-              ) : (
-                messages.map((m: any, idx: number) => (
-                  <div key={idx} className={`flex ${m.rol === 'admin' ? 'justify-start' : 'justify-end'}`}>
-                    <div className={`max-w-[85%] rounded-2xl p-4 shadow-sm ${m.rol === 'admin' ? 'bg-white border border-slate-200 rounded-tl-sm' : 'bg-brand-green-900 text-white rounded-tr-sm'}`}>
-                      <p className="text-sm">{m.mensaje}</p>
-                      <div className={`text-[10px] mt-2 flex items-center gap-1 ${m.rol === 'admin' ? 'text-slate-400' : 'text-brand-green-200'}`}>
-                        <span className="font-bold uppercase tracking-wider">{m.rol === 'admin' ? 'Soporte Técnico' : 'Usuario'}</span>
-                        <span>·</span>
-                        <span>{fmtDate(m.fecha)}</span>
-                      </div>
-                    </div>
+              {esSoporte && (
+                <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 p-4">
+                  <div className="min-w-[160px] flex-1">
+                    <Label htmlFor="d-estado">Estado</Label>
+                    <select id="d-estado" value={detalle.estado}
+                      onChange={e => {
+                        if (e.target.value === 'Cerrado') setConfirmarCierre(true)
+                        else actualizar({ estado: e.target.value }, 'Estado actualizado.')
+                      }}
+                      className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold outline-none focus:border-brand-green-700">
+                      {meta.estados.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
                   </div>
-                ))
+                  <div className="min-w-[130px] flex-1">
+                    <Label htmlFor="d-prio">Prioridad</Label>
+                    <select id="d-prio" value={detalle.prioridad}
+                      onChange={e => actualizar({ prioridad: e.target.value }, 'Prioridad actualizada.')}
+                      className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold outline-none focus:border-brand-green-700">
+                      {meta.prioridades.map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
+                  </div>
+                  {!detalle.asignado_a && (
+                    <Button variant="secondary" onClick={() => actualizar({ asignado_a: 'yo' }, 'Tomaste la consulta.')}>
+                      Tomar el caso
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {!esSoporte && ['Resuelto', 'Cerrado'].includes(detalle.estado) && (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm text-amber-900 font-semibold">¿El problema sigue ocurriendo?</p>
+                  <Button variant="secondary" onClick={() => actualizar({ estado: 'Reabierto' }, 'Consulta reabierta.')}>
+                    Reabrir consulta
+                  </Button>
+                </div>
+              )}
+
+              <div>
+                <h4 className="font-bold text-slate-900 mb-3">Conversación</h4>
+                {detalle.mensajes.length === 0 ? (
+                  <p className="text-sm text-slate-500 italic py-3">Todavía no hay respuestas.</p>
+                ) : (
+                  <ul className="space-y-3 max-h-[38vh] overflow-y-auto pr-1">
+                    {detalle.mensajes.map(m => (
+                      <li key={m.id} className={`rounded-2xl p-4 border ${
+                        m.visibilidad === 'interna'
+                          ? 'bg-amber-50 border-amber-300 border-dashed'
+                          : 'bg-white border-slate-200'
+                      }`}>
+                        {/* La nota interna se distingue por texto, borde punteado y
+                            fondo: para algo que no debe leer el solicitante no
+                            alcanza con un matiz de color. */}
+                        {m.visibilidad === 'interna' && (
+                          <p className="text-[10px] font-black uppercase tracking-widest text-amber-700 mb-1">
+                            Nota interna · no la ve el solicitante
+                          </p>
+                        )}
+                        <p className="text-sm text-slate-800 whitespace-pre-line">{m.cuerpo}</p>
+                        <p className="text-[11px] text-slate-400 mt-2 font-semibold">
+                          {m.autor || 'Sistema'} · {formatFecha(m.created_at)}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {detalle.estado !== 'Cerrado' && (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                  <Label htmlFor="d-resp">Responder</Label>
+                  <textarea
+                    id="d-resp" rows={3} value={respuesta}
+                    onChange={e => setRespuesta(e.target.value)}
+                    placeholder="Escribí tu respuesta…"
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-brand-green-700 resize-y"
+                  />
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    {esSoporte && (
+                      <label className="flex items-center gap-2 text-sm font-semibold text-slate-600 cursor-pointer">
+                        <input type="checkbox" checked={esNotaInterna} onChange={e => setEsNotaInterna(e.target.checked)}
+                          className="h-4 w-4 rounded border-slate-300 accent-amber-600" />
+                        Nota interna (no la ve el solicitante)
+                      </label>
+                    )}
+                    <Button variant="primary" loading={enviando} disabled={!respuesta.trim()} onClick={enviarMensaje} className="ml-auto">
+                      Enviar
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {detalle.eventos.length > 0 && (
+                <details className="rounded-2xl border border-slate-200 p-4">
+                  <summary className="font-bold text-slate-700 cursor-pointer text-sm">
+                    Historial ({detalle.eventos.length})
+                  </summary>
+                  <ul className="mt-3 space-y-2">
+                    {detalle.eventos.map((e, i) => (
+                      <li key={i} className="text-xs text-slate-600 flex flex-wrap gap-1">
+                        <span className="font-semibold text-slate-800">{e.actor || 'Sistema'}</span>
+                        <span>{TEXTO_EVENTO[e.tipo] || e.tipo}</span>
+                        {e.valor_anterior && <span>de <b>{e.valor_anterior}</b></span>}
+                        {e.valor_nuevo && <span>a <b>{e.valor_nuevo}</b></span>}
+                        <span className="text-slate-400">· {formatFecha(e.created_at)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
               )}
             </div>
-
-            <div className="flex gap-3 items-end bg-slate-50 p-4 rounded-2xl border border-slate-200">
-              <div className="flex-1">
-                <textarea
-                  value={newMessage}
-                  onChange={e => setNewMessage(e.target.value)}
-                  placeholder="Escribir una respuesta..."
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-brand-green-500/20 focus:border-brand-green-500 outline-none transition-all resize-none"
-                  rows={2}
-                />
-              </div>
-              <button disabled={sendingMessage || !newMessage.trim()} onClick={handleSendMessage} className="px-5 py-3 rounded-xl bg-brand-green-700 text-white font-bold hover:bg-brand-green-800 transition-colors disabled:opacity-50 shadow-sm flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-                Enviar
-              </button>
-            </div>
-          </div>
+          )}
         </Modal>
+      )}
+
+      {confirmarCierre && (
+        <ConfirmDialog
+          title="Cerrar la consulta"
+          message="Una vez cerrada no se pueden agregar respuestas. El solicitante puede reabrirla si el problema continúa."
+          confirmLabel="Cerrar consulta"
+          tone="normal"
+          onConfirm={() => { setConfirmarCierre(false); actualizar({ estado: 'Cerrado' }, 'Consulta cerrada.') }}
+          onCancel={() => setConfirmarCierre(false)}
+        />
       )}
     </div>
   )
