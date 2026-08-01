@@ -178,14 +178,26 @@ export default function App() {
 
       {/* En movil la navegacion vive solo en la barra inferior fija: la grilla que
           habia aca arriba mostraba las mismas pestanas dos veces en pantalla. */}
-      <nav aria-label="Navegación principal" className="hidden md:flex mb-6 flex-wrap gap-3">
+      {/* Navegacion agrupada por uso: lo que se toca varias veces por dia queda
+          separado de lo administrativo y de las utilidades transversales. Antes
+          eran cinco pestañas planas en orden historico, sin jerarquia. */}
+      <nav aria-label="Navegación principal" className="hidden md:flex mb-6 flex-wrap items-center gap-x-3 gap-y-2">
+        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-1">Operación</span>
         <NavButton label="Egresos" active={tab === 'distributions'} onClick={() => setTab('distributions')} />
         <NavButton label="Articulos" active={tab === 'items'} onClick={() => setTab('items')} />
         <NavButton label="Movimientos" active={tab === 'movements'} onClick={() => setTab('movements')} />
-        <NavButton label="Soporte" active={tab === 'soporte'} onClick={() => setTab('soporte')} />
+
         {canOpenSupervisor && (
-          <NavButton label="Supervisor" active={tab === 'supervisor'} tone="amber" onClick={() => setTab('supervisor')} />
+          <>
+            <span className="w-px h-7 bg-slate-200 mx-1" aria-hidden="true" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-1">Administración</span>
+            <NavButton label="Supervisor" active={tab === 'supervisor'} tone="amber" onClick={() => setTab('supervisor')} />
+          </>
         )}
+
+        <span className="w-px h-7 bg-slate-200 mx-1" aria-hidden="true" />
+        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-1">Ayuda</span>
+        <NavButton label="Soporte" active={tab === 'soporte'} onClick={() => setTab('soporte')} />
       </nav>
 
       {tab === 'distributions' && <DistributionsPage />}

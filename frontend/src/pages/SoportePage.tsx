@@ -3,6 +3,7 @@ import { apiGet, apiPost, apiPut } from '../api/client'
 import EmptyState from '../components/EmptyState'
 import Modal from '../components/Modal'
 import Banner, { type Feedback } from '../components/Banner'
+import { formatFecha } from '../lib/format'
 
 export default function SoportePage({ role }: { role: string | null }) {
   // La base solo admite admin, supervisor y operador (schema.sql). 'administrator'
@@ -85,11 +86,9 @@ export default function SoportePage({ role }: { role: string | null }) {
     }
   }
 
-  const fmtDate = (d: string) => {
-    if (!d) return '-'
-    const dt = new Date(d)
-    return dt.toLocaleDateString('es-AR') + ' ' + dt.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
-  }
+  // Formato compartido con Movimientos y Egresos: antes esta pantalla usaba
+  // toLocaleDateString por su cuenta y las fechas no coincidian entre modulos.
+  const fmtDate = formatFecha
 
   const estadoColor: any = {
     Pendiente: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -201,7 +200,7 @@ export default function SoportePage({ role }: { role: string | null }) {
       </div>
 
       {showNewForm && (
-        <Modal title="Nuevo Ticket" onClose={() => setShowNewForm(false)} size="md">
+        <Modal title="Nueva consulta" onClose={() => setShowNewForm(false)} size="md" confirmarCierre={newConsulta.trim().length > 0}>
           <div className="space-y-4 p-2">
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-1">Descripción del problema o consulta</label>

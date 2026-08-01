@@ -15,12 +15,20 @@ export default {
             500: 'var(--sr-blue-500)',
           },
           green: {
-            900: 'var(--sr-green-900)',
-            700: 'var(--sr-green-700)',
+            50:  'var(--sr-green-50)',
+            100: 'var(--sr-green-100)',
+            200: 'var(--sr-green-200)',
             500: 'var(--sr-green-500)',
+            600: 'var(--sr-green-600)',
+            700: 'var(--sr-green-700)',
+            800: 'var(--sr-green-800)',
+            900: 'var(--sr-green-900)',
           },
           gold: {
+            50:  'var(--sr-gold-50)',
+            100: 'var(--sr-gold-100)',
             500: 'var(--sr-gold-500)',
+            600: 'var(--sr-gold-600)',
           }
         },
       },
