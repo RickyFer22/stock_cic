@@ -17,12 +17,15 @@ type MeResponse = { user?: { full_name: string; role: Role } }
 type ShellProps = {
   children: any
   userName: string | null
+  tab: Tab
+  setTab: (t: Tab) => void
+  canOpenSupervisor: boolean
   onLogout: () => void
   onHelp: () => void
   showHelpButton: boolean
 }
 
-type NavItem = { k: Tab; l: string; ayuda: string; tono?: 'amber' }
+type NavItem = { k: Tab; l: string; icono: string; ayuda: string; tono?: 'amber' }
 
 const HASH_MAP: Record<string, Tab> = {
   egresos: 'egresos',
@@ -39,117 +42,195 @@ const GRUPOS: { titulo: string; items: NavItem[] }[] = [
   {
     titulo: 'Operación',
     items: [
-      { k: 'egresos', l: 'Egresos', ayuda: 'Registrar y consultar la mercadería que sale del depósito' },
-      { k: 'articulos', l: 'Artículos', ayuda: 'Alta, edición y stock disponible de cada artículo' },
-      { k: 'movimientos', l: 'Movimientos', ayuda: 'Historial completo de ingresos y egresos' },
+      { k: 'egresos', l: 'Egresos', icono: '📦', ayuda: 'Registrar y consultar la mercadería que sale del depósito' },
+      { k: 'articulos', l: 'Artículos', icono: '📋', ayuda: 'Alta, edición y stock disponible de cada artículo' },
+      { k: 'movimientos', l: 'Movimientos', icono: '📊', ayuda: 'Historial completo de ingresos y egresos' },
     ],
   },
   {
     titulo: 'Administración',
     items: [
-      { k: 'supervisor', l: 'Supervisor', ayuda: 'Métricas del depósito, log de auditoría y gestión de usuarios', tono: 'amber' },
+      { k: 'supervisor', l: 'Supervisor', icono: '🛡️', ayuda: 'Métricas del depósito, log de auditoría y gestión de usuarios', tono: 'amber' },
     ],
   },
   {
     titulo: 'Ayuda',
     items: [
-      { k: 'soporte', l: 'Soporte', ayuda: 'Abrir una consulta al equipo de sistemas y seguir su estado' },
+      { k: 'soporte', l: 'Soporte', icono: '💬', ayuda: 'Abrir una consulta al equipo de sistemas y seguir su estado' },
     ],
   },
 ]
 
-function NavButton({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
-  const amber = item.tono === 'amber'
-  const activeClass = amber
-    ? 'bg-state-warn text-accent-ink border-state-warn'
-    : 'bg-accent-strong text-accent-ink border-accent-strong'
-  const idleClass = amber
-    ? 'bg-paper text-state-warn border-state-warn/40 hover:border-state-warn hover:bg-state-warn-bg'
-    : 'bg-paper text-ink-2 border-rule hover:text-ink hover:border-accent hover:bg-accent-soft'
+function Shell({ children, userName, tab, setTab, canOpenSupervisor, onLogout, onHelp, showHelpButton }: ShellProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  return (
-    <button
-      onClick={onClick}
-      data-tip={item.ayuda}
-      aria-current={active ? 'page' : undefined}
-      className={`min-h-[2.75rem] px-4 py-2.5 rounded-[--radius-input] border
-        font-bold tracking-wide uppercase text-[length:--text-xs] sm:text-[length:--text-sm]
-        transition-colors duration-[--dur-fast] ease-[--ease-out]
-        focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus
-        ${active ? activeClass : idleClass}`}
-    >
-      {item.l}
-    </button>
-  )
-}
-
-function Shell({ children, userName, onLogout, onHelp, showHelpButton }: ShellProps) {
-  return (
-    <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-40 border-b border-rule bg-paper-2">
-        <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-[--radius-input] bg-accent-strong text-accent-ink flex items-center justify-center shrink-0">
-              <span className="text-lg" aria-hidden="true">🏛</span>
+  // If user is not logged in (LoginPage view)
+  if (!userName) {
+    return (
+      <div className="min-h-screen bg-paper flex flex-col justify-between p-4 sm:p-8">
+        <main className="mx-auto w-full max-w-5xl my-auto">{children}</main>
+        <footer className="mt-8 border-t border-rule pt-4 text-center text-xs text-ink-3">
+          <div className="mx-auto max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div className="font-semibold text-ink-2">
+              Dirección de Modernización: <span className="font-bold text-accent">Ricardo Fernández</span>
             </div>
-            <div className="min-w-0">
-              <div className="font-display text-ink font-extrabold tracking-wide uppercase leading-tight text-[length:--text-md] truncate">
-                Stock <span className="text-accent">MSR</span>
-              </div>
-              <div className="text-[length:--text-xs] text-ink-3 font-bold tracking-wide uppercase truncate">Acción Social</div>
+            <div className="font-medium text-ink-3">
+              Intendente Cr. Raúl Pelozo — <span className="font-semibold text-ink-2">Gestión 2025-2029</span>
             </div>
           </div>
+        </footer>
+      </div>
+    )
+  }
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            {userName && (
-              <span className="hidden lg:inline text-[length:--text-sm] text-ink-2">
-                Operador: <b className="text-ink">{userName}</b>
-              </span>
-            )}
-
-            <ThemeToggle />
-
-            {showHelpButton && (
-              <button
-                onClick={onHelp}
-                data-tip="Guía de uso de la pantalla en la que estás"
-                className="min-h-[2.75rem] px-3 py-2 rounded-[--radius-input] border border-rule bg-paper
-                  text-[length:--text-xs] font-bold tracking-wide uppercase text-ink-2
-                  hover:text-ink hover:border-rule-strong transition-colors duration-[--dur-fast]
-                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-              >
-                Ayuda
-              </button>
-            )}
-
-            {userName && (
-              <button
-                onClick={onLogout}
-                data-tip="Cerrar la sesión y volver al inicio"
-                className="min-h-[2.75rem] px-4 py-2 rounded-[--radius-input] border border-rule bg-paper
-                  text-[length:--text-xs] font-bold tracking-wide uppercase text-ink-2
-                  hover:text-ink hover:border-rule-strong transition-colors duration-[--dur-fast]
-                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-              >
-                Salir
-              </button>
-            )}
+  return (
+    <div className="min-h-screen bg-paper flex flex-col md:flex-row">
+      {/* BARRA SUPERIOR MOBILE */}
+      <header className="md:hidden sticky top-0 z-40 border-b border-rule bg-paper-2 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-accent-strong text-accent-ink flex items-center justify-center font-bold">
+            🏛
           </div>
+          <div>
+            <div className="font-display font-extrabold text-ink text-sm uppercase leading-none">
+              Stock <span className="text-accent">MSR</span>
+            </div>
+            <div className="text-[10px] text-ink-3 font-bold uppercase mt-0.5">Acción Social</div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 rounded-lg border border-rule bg-paper text-ink font-bold text-sm uppercase"
+            aria-label="Abrir menú"
+          >
+            {mobileMenuOpen ? '✕' : '☰'}
+          </button>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6 pb-28 md:pb-8 flex-1">{children}</main>
-
-      <footer className="border-t border-rule bg-paper-2 py-4 text-xs text-ink-3">
-        <div className="mx-auto max-w-6xl px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div className="font-semibold text-ink-2">
-            Dirección de Modernización: <span className="font-bold text-accent">Ricardo Fernández</span>
+      {/* MENÚ LATERAL IZQUIERDO (DESKTOP + MOBILE DRAWER) */}
+      <aside className={`
+        fixed md:sticky top-0 inset-y-0 left-0 z-50 w-64 md:w-72 bg-paper-2 border-r border-rule flex flex-col justify-between transition-transform duration-200 ease-in-out
+        ${mobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'}
+      `}>
+        <div className="p-5 flex flex-col gap-6 overflow-y-auto">
+          {/* Logo Marca Municipal */}
+          <div className="flex items-center gap-3 pb-4 border-b border-rule">
+            <div className="w-11 h-11 rounded-xl bg-accent-strong text-white shadow-md flex items-center justify-center shrink-0">
+              <span className="text-xl">🏛</span>
+            </div>
+            <div>
+              <div className="font-display text-ink font-extrabold tracking-wide uppercase leading-tight text-base">
+                Stock <span className="text-accent">MSR</span>
+              </div>
+              <div className="text-xs text-ink-3 font-bold tracking-wide uppercase mt-0.5">Acción Social</div>
+            </div>
           </div>
-          <div className="font-medium text-ink-3">
-            Intendente Cr. Raúl Pelozo — <span className="font-semibold text-ink-2">Gestión 2025-2029</span>
+
+          {/* Menú por Grupos */}
+          <nav className="space-y-6">
+            {GRUPOS.map((grupo) => {
+              const visibles = grupo.items.filter((i) => i.k !== 'supervisor' || canOpenSupervisor)
+              if (!visibles.length) return null
+              return (
+                <div key={grupo.titulo} className="space-y-2">
+                  <div className="text-[11px] font-black uppercase tracking-[0.16em] text-ink-3 px-2 select-none">
+                    {grupo.titulo}
+                  </div>
+                  <div className="space-y-1">
+                    {visibles.map((item) => {
+                      const active = tab === item.k
+                      const amber = item.tono === 'amber'
+                      
+                      const activeStyle = amber
+                        ? 'bg-amber-600 text-white font-bold shadow-md'
+                        : 'bg-accent-strong text-white font-bold shadow-md'
+                      const idleStyle = amber
+                        ? 'text-amber-700 hover:bg-amber-50 hover:text-amber-800'
+                        : 'text-ink-2 hover:bg-accent-soft hover:text-accent font-semibold'
+
+                      return (
+                        <button
+                          key={item.k}
+                          onClick={() => {
+                            setTab(item.k)
+                            setMobileMenuOpen(false)
+                          }}
+                          className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-between group ${
+                            active ? activeStyle : idleStyle
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-base">{item.icono}</span>
+                            <span>{item.l}</span>
+                          </div>
+                          {active && <span className="text-xs">›</span>}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </nav>
+        </div>
+
+        {/* Footer del Menú Lateral */}
+        <div className="p-4 border-t border-rule bg-paper-3/40 space-y-3">
+          {userName && (
+            <div className="bg-paper p-3 rounded-xl border border-rule">
+              <div className="text-[10px] text-ink-3 uppercase font-bold tracking-wider">Operador Activo</div>
+              <div className="text-xs font-bold text-ink truncate mt-0.5">{userName}</div>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            {showHelpButton && (
+              <button
+                onClick={onHelp}
+                className="flex-1 py-2 px-3 rounded-xl border border-rule bg-paper text-ink-2 text-xs font-bold uppercase hover:bg-paper-3 transition"
+              >
+                ❓ Ayuda
+              </button>
+            )}
+            <button
+              onClick={onLogout}
+              className="py-2 px-3 rounded-xl border border-state-danger/30 bg-state-danger-bg text-state-danger text-xs font-bold uppercase hover:bg-state-danger hover:text-white transition"
+              title="Cerrar sesión"
+            >
+              Salir
+            </button>
           </div>
         </div>
-      </footer>
+      </aside>
+
+      {/* ÁREA DE CONTENIDO PRINCIPAL */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+        <main className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto">{children}</main>
+
+        <footer className="border-t border-rule bg-paper-2 py-4 px-6 text-xs text-ink-3 mt-auto">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div className="font-semibold text-ink-2">
+              Dirección de Modernización: <span className="font-bold text-accent">Ricardo Fernández</span>
+            </div>
+            <div className="font-medium text-ink-3">
+              Intendente Cr. Raúl Pelozo — <span className="font-semibold text-ink-2">Gestión 2025-2029</span>
+            </div>
+          </div>
+        </footer>
+      </div>
+
+      {/* OVERLAY PARA MOBILE MENU */}
+      {mobileMenuOpen && (
+        <div
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 bg-ink/40 backdrop-blur-sm z-40 md:hidden"
+        />
+      )}
     </div>
   )
 }
@@ -212,7 +293,15 @@ export default function App() {
 
   if (error) {
     return (
-      <Shell userName={null} onLogout={() => { setToken(null); location.reload() }} onHelp={() => {}} showHelpButton={false}>
+      <Shell
+        userName={null}
+        tab={tab}
+        setTab={setTab}
+        canOpenSupervisor={false}
+        onLogout={() => { setToken(null); location.reload() }}
+        onHelp={() => {}}
+        showHelpButton={false}
+      >
         <LoginPage onLoggedIn={() => { setError(null); setMe(null); setRefreshKey((k) => k + 1) }} />
       </Shell>
     )
@@ -223,76 +312,20 @@ export default function App() {
   return (
     <Shell
       userName={userName}
+      tab={tab}
+      setTab={setTab}
+      canOpenSupervisor={canOpenSupervisor}
       onLogout={() => { setToken(null); location.reload() }}
       onHelp={() => setHelpOpen(true)}
       showHelpButton
     >
       <HelpPanel open={helpOpen} onClose={() => setHelpOpen(false)} currentTab={tab} showSupervisorHelp={canOpenSupervisor} />
 
-      <nav aria-label="Navegación principal" className="hidden md:flex mb-6 flex-wrap items-start gap-x-8 gap-y-4">
-        {GRUPOS.map((grupo) => {
-          const visibles = grupo.items.filter((i) => i.k !== 'supervisor' || canOpenSupervisor)
-          if (!visibles.length) return null
-          return (
-            <div key={grupo.titulo} className="flex flex-col gap-2">
-              <span
-                className="text-[10px] font-black uppercase tracking-[0.18em] text-ink-3 pl-1 select-none"
-                aria-hidden="true"
-              >
-                {grupo.titulo}
-              </span>
-              <div className="flex flex-wrap items-center gap-2">
-                {visibles.map((item) => (
-                  <NavButton
-                    key={item.k}
-                    item={item}
-                    active={tab === item.k}
-                    onClick={() => setTab(item.k)}
-                  />
-                ))}
-              </div>
-            </div>
-          )
-        })}
-      </nav>
-
       {tab === 'egresos' && <DistributionsPage />}
       {tab === 'articulos' && <ItemsPage role={role} />}
       {tab === 'movimientos' && <MovementsPage />}
       {tab === 'soporte' && <SoportePage role={role} />}
       {tab === 'supervisor' && canOpenSupervisor && <SupervisorPage role={role as 'admin' | 'supervisor'} />}
-
-      <nav
-        aria-label="Navegación principal"
-        className="fixed md:hidden bottom-0 inset-x-0 z-40 border-t border-rule bg-paper/95 px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]"
-      >
-        <div className={`grid gap-1.5 ${canOpenSupervisor ? 'grid-cols-5' : 'grid-cols-4'}`}>
-          {([
-            ['egresos', 'Egresos'],
-            ['articulos', 'Artículos'],
-            ['movimientos', 'Movim.'],
-            ['soporte', 'Soporte'],
-            ...(canOpenSupervisor ? [['supervisor', 'Superv.'] as [Tab, string]] : []),
-          ] as [Tab, string][]).map(([key, label]) => {
-            const active = tab === key
-            const amber = key === 'supervisor'
-            return (
-              <button
-                key={key}
-                onClick={() => setTab(key)}
-                aria-current={active ? 'page' : undefined}
-                className={`rounded-xl px-1 py-2 text-[10.5px] font-bold uppercase tracking-wide truncate ${
-                  active
-                    ? amber ? 'bg-state-warn text-accent-ink' : 'bg-accent-strong text-accent-ink'
-                    : amber ? 'bg-state-warn-bg text-state-warn' : 'bg-paper-3 text-ink-2'
-                }`}
-              >
-                {label}
-              </button>
-            )
-          })}
-        </div>
-      </nav>
     </Shell>
   )
 }

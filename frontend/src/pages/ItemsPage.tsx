@@ -423,78 +423,89 @@ export default function ItemsPage({ role }: { role: string | null }) {
   }
 
   const header = useMemo(() => (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display font-extrabold text-ink text-3xl uppercase tracking-wider">Artículos</h1>
-          <p className="text-ink-2 mt-1 font-medium text-sm">Catálogo de artículos y stock actual.</p>
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="font-display font-extrabold text-ink text-3xl uppercase tracking-wider">Artículos</h1>
+        <p className="text-ink-2 mt-1 font-medium text-sm">Catálogo de artículos y stock actual.</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Panel Acciones de Inventario */}
+        <div className="bg-paper-2 border border-rule rounded-2xl p-4 shadow-sm flex flex-col justify-between gap-3">
+          <div className="text-xs font-bold text-ink-3 uppercase tracking-wider flex items-center gap-1.5">
+            <span>⚡</span> Acciones Principales
+          </div>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              onClick={() => setShowForm(true)}
+              className="px-4 py-2.5 rounded-xl bg-accent-strong text-accent-ink font-bold tracking-wide uppercase text-xs sm:text-sm hover:brightness-110 shadow-sm hover:shadow transition-all"
+            >
+              + Nuevo ítem
+            </button>
+            <button
+              onClick={() => setShowIngreso(true)}
+              className="px-4 py-2.5 rounded-xl bg-state-ok-bg text-state-ok font-bold tracking-wide uppercase text-xs sm:text-sm hover:brightness-110 shadow-sm hover:shadow transition-all border border-state-ok/20"
+            >
+              + Ingresar stock
+            </button>
+            <button
+              onClick={() => setShowEgreso(true)}
+              className="px-4 py-2.5 rounded-xl bg-state-danger-bg text-state-danger font-bold tracking-wide uppercase text-xs sm:text-sm hover:brightness-110 shadow-sm hover:shadow transition-all border border-state-danger/20"
+            >
+              − Egresar stock
+            </button>
+          </div>
+        </div>
+
+        {/* Panel Reportes & Archivos */}
+        <div className="bg-paper-2 border border-rule rounded-2xl p-4 shadow-sm flex flex-col justify-between gap-3">
+          <div className="text-xs font-bold text-ink-3 uppercase tracking-wider flex items-center gap-1.5">
+            <span>📊</span> Reportes y Datos Excel
+          </div>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              onClick={handleExportHealth}
+              disabled={exporting !== null}
+              className="px-4 py-2.5 rounded-xl bg-paper border border-rule shadow-sm font-bold tracking-wide text-ink-2 hover:bg-paper-3 hover:border-rule-strong transition-all uppercase text-xs sm:text-sm disabled:opacity-50"
+            >
+              {exporting === 'health' ? 'Generando…' : 'Reporte stock'}
+            </button>
+            <button
+              onClick={handleExport}
+              disabled={exporting !== null}
+              className="px-4 py-2.5 rounded-xl bg-paper border border-rule shadow-sm font-bold tracking-wide text-ink-2 hover:bg-paper-3 hover:border-rule-strong transition-all uppercase text-xs sm:text-sm disabled:opacity-50"
+            >
+              {exporting === 'items' ? 'Generando…' : 'Exportar Excel'}
+            </button>
+            <label className="px-4 py-2.5 rounded-xl bg-accent-soft text-accent font-bold tracking-wide uppercase text-xs sm:text-sm hover:bg-accent-strong hover:text-white transition-all border border-accent/30 cursor-pointer">
+              {importing ? 'Importando…' : 'Importar Excel'}
+              <input
+                type="file"
+                accept=".xlsx"
+                className="hidden"
+                onChange={async (e) => {
+                  const f = e.target.files?.[0]
+                  e.target.value = ''
+                  if (!f) return
+                  setImportResult(null)
+                  setImporting(true)
+                  try {
+                    const json = await apiUploadExcel('/api/import/items', f)
+                    setImportResult(json.data)
+                    loadItems()
+                  } catch (err: any) {
+                    setFeedback({ tone: 'error', text: err.message || 'Error al importar' })
+                  } finally {
+                    setImporting(false)
+                  }
+                }}
+              />
+            </label>
+          </div>
         </div>
       </div>
-      {/* Acciones principales: orden claro (alta prioridad primero) */}
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="text-xs font-bold text-ink-3 uppercase tracking-wider mr-1 hidden sm:inline">Acciones</span>
-        <button
-          onClick={() => setShowForm(true)}
-          className="px-5 py-2.5 rounded-xl bg-accent-strong text-accent-ink font-bold tracking-wide uppercase text-sm hover:brightness-110 shadow-md hover:shadow-lg transition-all"
-        >
-          + Nuevo ítem
-        </button>
-        <button
-          onClick={() => setShowIngreso(true)}
-          className="px-5 py-2.5 rounded-xl bg-state-ok-bg text-state-ok font-bold tracking-wide uppercase text-sm hover:brightness-110 shadow-md hover:shadow-lg transition-all"
-        >
-          + Ingresar stock
-        </button>
-        <button
-          onClick={() => setShowEgreso(true)}
-          className="px-5 py-2.5 rounded-xl bg-state-danger-bg text-state-danger font-bold tracking-wide uppercase text-sm hover:brightness-110 shadow-md hover:shadow-lg transition-all"
-        >
-          − Egresar stock
-        </button>
-        <div className="w-px h-8 bg-rule hidden sm:block" aria-hidden />
-        <span className="text-xs font-bold text-ink-3 uppercase tracking-wider mr-1 hidden sm:inline">Reportes y datos</span>
-        <button
-          onClick={handleExportHealth}
-          disabled={exporting !== null}
-          className="px-5 py-2.5 rounded-xl bg-paper border-2 border-rule shadow-sm font-bold tracking-wide text-ink-2 hover:bg-paper-3 hover:border-rule-strong transition-all uppercase text-sm disabled:opacity-50"
-        >
-          {exporting === 'health' ? 'Generando…' : 'Reporte stock'}
-        </button>
-        <button
-          onClick={handleExport}
-          disabled={exporting !== null}
-          className="px-5 py-2.5 rounded-xl bg-paper border-2 border-rule shadow-sm font-bold tracking-wide text-ink-2 hover:bg-paper-3 hover:border-rule-strong transition-all uppercase text-sm disabled:opacity-50"
-        >
-          {exporting === 'items' ? 'Generando…' : 'Exportar Excel'}
-        </button>
-        <label className="px-5 py-2.5 rounded-xl bg-accent-strong text-accent-ink font-bold tracking-wide uppercase text-sm hover:brightness-110 transition-all shadow-md hover:shadow-lg cursor-pointer">
-          {importing ? 'Importando…' : 'Importar Excel'}
-          <input
-            type="file"
-            accept=".xlsx"
-            className="hidden"
-            onChange={async (e) => {
-              const f = e.target.files?.[0]
-              e.target.value = ''
-              if (!f) return
-              setImportResult(null)
-              setImporting(true)
-              try {
-                const json = await apiUploadExcel('/api/import/items', f)
-                setImportResult(json.data)
-                const refreshed = await apiGet<{ data: ItemRow[] }>('/api/items')
-                setItems(refreshed.data)
-              } catch (err) {
-                setError((err as Error).message)
-              } finally {
-                setImporting(false)
-              }
-            }}
-          />
-        </label>
-      </div>
     </div>
-  ), [importing])
+  ), [exporting, handleExport, handleExportHealth, importing, loadItems])
 
   if (loading) return <EmptyState icon="⏳" message="Cargando" sub="Leyendo items..." />
   if (error) return <EmptyState icon="⚠️" message="Error" sub={error} />
