@@ -1,6 +1,6 @@
 import Modal from './Modal'
 
-type Tab = 'distributions' | 'items' | 'movements' | 'supervisor' | 'soporte'
+type Tab = 'egresos' | 'articulos' | 'movimientos' | 'supervisor' | 'soporte'
 
 type HelpPanelProps = {
   open: boolean
@@ -10,26 +10,26 @@ type HelpPanelProps = {
 }
 
 const HELP_BY_TAB: Record<Tab, { title: string; steps: string[] }> = {
-  distributions: {
+  egresos: {
     title: 'Como usar Egresos',
     steps: [
       'Toca "+ Registrar egreso" para abrir el formulario.',
-      'Carga destino, tipo y articulos con sus cantidades.',
-      'Confirma y revisa el listado para validar fecha, operador y observaciónes.',
+      'Carga destino, tipo y artículos con sus cantidades.',
+      'Confirma y revisa el listado para validar fecha, operador y observaciones.',
     ],
   },
-  items: {
+  articulos: {
     title: 'Como usar Artículos',
     steps: [
-      'Usa "+ Nuevo item" para crear un articulo con código único.',
+      'Usa "+ Nuevo ítem" para crear un artículo con código único.',
       'Usa "+ Ingresar stock" y "- Egresar stock" para mover inventario.',
       'Filtra por texto y exporta reportes para control mensual.',
     ],
   },
-  movements: {
+  movimientos: {
     title: 'Como usar Movimientos',
     steps: [
-      'Aplica filtros por tipo y texto para encontrar registros rapido.',
+      'Aplica filtros por tipo y texto para encontrar registros rápido.',
       'Verifica columna tipo y cantidades para detectar errores de carga.',
       'Si algo no coincide, revisa en Egresos o Artículos el movimiento origen.',
     ],
@@ -37,9 +37,9 @@ const HELP_BY_TAB: Record<Tab, { title: string; steps: string[] }> = {
   supervisor: {
     title: 'Como usar Supervisor',
     steps: [
-      'Revisa metricas de salud de stock y actividad de los ultimos 30 dias.',
-      'Si eres admin, gestiona usuarios desde "Control de usuarios".',
-      'Usa este panel para decidir compras, ajustes y prioridades.',
+      'Revisa métricas de salud de stock y actividad de los últimos 30 días.',
+      'Inspecciona el log de auditoría completo para ver quién modificó datos.',
+      'Si eres admin, gestiona usuarios desde la pestaña "Usuarios".',
     ],
   },
   soporte: {

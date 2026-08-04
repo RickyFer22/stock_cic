@@ -11,7 +11,7 @@ import SupervisorPage from './pages/SupervisorPage'
 import SoportePage from './pages/SoportePage'
 
 type Role = 'admin' | 'supervisor' | 'operador'
-type Tab = 'distributions' | 'items' | 'movements' | 'supervisor' | 'soporte'
+type Tab = 'egresos' | 'articulos' | 'movimientos' | 'supervisor' | 'soporte'
 type MeResponse = { user?: { full_name: string; role: Role } }
 
 type ShellProps = {
@@ -24,25 +24,30 @@ type ShellProps = {
 
 type NavItem = { k: Tab; l: string; ayuda: string; tono?: 'amber' }
 
-/**
- * Navegación agrupada. Antes los rótulos de grupo iban en la misma línea que los
- * botones, así que "Operación" y "Administración" se leían como dos opciones más
- * y no se entendía cuáles eran los accesos reales. Ahora el rótulo va arriba,
- * chico y apagado: se lee como el título de la fila, no como algo que se toca.
- */
+const HASH_MAP: Record<string, Tab> = {
+  egresos: 'egresos',
+  distributions: 'egresos',
+  articulos: 'articulos',
+  items: 'articulos',
+  movimientos: 'movimientos',
+  movements: 'movimientos',
+  supervisor: 'supervisor',
+  soporte: 'soporte',
+}
+
 const GRUPOS: { titulo: string; items: NavItem[] }[] = [
   {
     titulo: 'Operación',
     items: [
-      { k: 'distributions', l: 'Egresos', ayuda: 'Registrar y consultar la mercadería que sale del depósito' },
-      { k: 'items', l: 'Artículos', ayuda: 'Alta, edición y stock disponible de cada artículo' },
-      { k: 'movements', l: 'Movimientos', ayuda: 'Historial completo de ingresos y egresos' },
+      { k: 'egresos', l: 'Egresos', ayuda: 'Registrar y consultar la mercadería que sale del depósito' },
+      { k: 'articulos', l: 'Artículos', ayuda: 'Alta, edición y stock disponible de cada artículo' },
+      { k: 'movimientos', l: 'Movimientos', ayuda: 'Historial completo de ingresos y egresos' },
     ],
   },
   {
     titulo: 'Administración',
     items: [
-      { k: 'supervisor', l: 'Supervisor', ayuda: 'Métricas del depósito y gestión de usuarios', tono: 'amber' },
+      { k: 'supervisor', l: 'Supervisor', ayuda: 'Métricas del depósito, log de auditoría y gestión de usuarios', tono: 'amber' },
     ],
   },
   {
@@ -54,9 +59,6 @@ const GRUPOS: { titulo: string; items: NavItem[] }[] = [
 ]
 
 function NavButton({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
-  // El estado activo se marca con relleno de acento Y aria-current: el color no
-  // comunica solo. El tono ámbar distingue Supervisor sin salir de la escala
-  // semántica de "atención".
   const amber = item.tono === 'amber'
   const activeClass = amber
     ? 'bg-state-warn text-accent-ink border-state-warn'
@@ -83,9 +85,7 @@ function NavButton({ item, active, onClick }: { item: NavItem; active: boolean; 
 
 function Shell({ children, userName, onLogout, onHelp, showHelpButton }: ShellProps) {
   return (
-    <div className="min-h-screen">
-      {/* Sin glassmorphism: el género modern-minimal lo excluye, y sobre una
-          tabla densa el desenfoque solo agrega ruido. Papel sólido y una regla. */}
+    <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-40 border-b border-rule bg-paper-2">
         <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -138,7 +138,7 @@ function Shell({ children, userName, onLogout, onHelp, showHelpButton }: ShellPr
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6 pb-28 md:pb-8">{children}</main>
+      <main className="mx-auto max-w-6xl px-4 py-6 pb-28 md:pb-8 flex-1">{children}</main>
 
       <footer className="border-t border-rule bg-paper-2 py-4 text-xs text-ink-3">
         <div className="mx-auto max-w-6xl px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
@@ -158,26 +158,25 @@ export default function App() {
   const [me, setMe] = useState<MeResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
-  const [tab, setTab] = useState<Tab>('distributions')
+  const [tab, setTab] = useState<Tab>('egresos')
   const [helpOpen, setHelpOpen] = useState(false)
 
   const role = me?.user?.role ?? null
   const canOpenSupervisor = role === 'admin' || role === 'supervisor'
 
   const availableTabs = useMemo<Tab[]>(
-    () => (canOpenSupervisor ? ['distributions', 'items', 'movements', 'supervisor', 'soporte'] : ['distributions', 'items', 'movements', 'soporte']),
+    () => (canOpenSupervisor ? ['egresos', 'articulos', 'movimientos', 'supervisor', 'soporte'] : ['egresos', 'articulos', 'movimientos', 'soporte']),
     [canOpenSupervisor],
   )
 
-  // Sincroniza el hash con la pestaña activa, en los dos sentidos. Sin el listener
-  // de hashchange el boton Atras cambiaba la URL pero la vista se quedaba igual.
   useEffect(() => {
     const aplicarHash = () => {
-      const hash = window.location.hash.replace('#', '') as Tab
-      if (availableTabs.includes(hash)) {
-        setTab(hash)
-      } else if (hash === 'supervisor' && !canOpenSupervisor) {
-        setTab('distributions')
+      const rawHash = window.location.hash.replace('#', '')
+      const mappedTab = HASH_MAP[rawHash]
+      if (mappedTab && availableTabs.includes(mappedTab)) {
+        setTab(mappedTab)
+      } else if (rawHash === 'supervisor' && !canOpenSupervisor) {
+        setTab('egresos')
       }
     }
     aplicarHash()
@@ -205,7 +204,7 @@ export default function App() {
 
   useEffect(() => {
     if (!canOpenSupervisor && tab === 'supervisor') {
-      setTab('distributions')
+      setTab('egresos')
     }
   }, [canOpenSupervisor, tab])
 
@@ -230,11 +229,6 @@ export default function App() {
     >
       <HelpPanel open={helpOpen} onClose={() => setHelpOpen(false)} currentTab={tab} showSupervisorHelp={canOpenSupervisor} />
 
-      {/* En movil la navegacion vive solo en la barra inferior fija: la grilla que
-          habia aca arriba mostraba las mismas pestanas dos veces en pantalla. */}
-      {/* Navegacion agrupada por uso: lo que se toca varias veces por dia queda
-          separado de lo administrativo y de las utilidades transversales. Antes
-          eran cinco pestañas planas en orden historico, sin jerarquia. */}
       <nav aria-label="Navegación principal" className="hidden md:flex mb-6 flex-wrap items-start gap-x-8 gap-y-4">
         {GRUPOS.map((grupo) => {
           const visibles = grupo.items.filter((i) => i.k !== 'supervisor' || canOpenSupervisor)
@@ -262,9 +256,9 @@ export default function App() {
         })}
       </nav>
 
-      {tab === 'distributions' && <DistributionsPage />}
-      {tab === 'items' && <ItemsPage role={role} />}
-      {tab === 'movements' && <MovementsPage />}
+      {tab === 'egresos' && <DistributionsPage />}
+      {tab === 'articulos' && <ItemsPage role={role} />}
+      {tab === 'movimientos' && <MovementsPage />}
       {tab === 'soporte' && <SoportePage role={role} />}
       {tab === 'supervisor' && canOpenSupervisor && <SupervisorPage role={role as 'admin' | 'supervisor'} />}
 
@@ -274,9 +268,9 @@ export default function App() {
       >
         <div className={`grid gap-1.5 ${canOpenSupervisor ? 'grid-cols-5' : 'grid-cols-4'}`}>
           {([
-            ['distributions', 'Egresos'],
-            ['items', 'Artículos'],
-            ['movements', 'Movim.'],
+            ['egresos', 'Egresos'],
+            ['articulos', 'Artículos'],
+            ['movimientos', 'Movim.'],
             ['soporte', 'Soporte'],
             ...(canOpenSupervisor ? [['supervisor', 'Superv.'] as [Tab, string]] : []),
           ] as [Tab, string][]).map(([key, label]) => {
