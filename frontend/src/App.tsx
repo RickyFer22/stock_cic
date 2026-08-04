@@ -179,7 +179,7 @@ function Shell({ children, userName, tab, setTab, canOpenSupervisor, onLogout, o
         </div>
 
         {/* Footer del Menú Lateral */}
-        <div className="p-4 border-t border-rule bg-paper-3/40 space-y-3">
+        <div className="p-4 border-t border-rule bg-paper-3/40 space-y-3 shrink-0">
           {userName && (
             <div className="bg-paper p-3 rounded-xl border border-rule">
               <div className="text-[10px] text-ink-3 uppercase font-bold tracking-wider">Operador Activo</div>
@@ -187,22 +187,32 @@ function Shell({ children, userName, tab, setTab, canOpenSupervisor, onLogout, o
             </div>
           )}
 
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
+          {/* Selector de Tema Visual */}
+          <div className="space-y-1">
+            <div className="text-[10px] text-ink-3 uppercase font-bold tracking-wider px-0.5">Tema Visual</div>
+            <div className="flex justify-center">
+              <ThemeToggle />
+            </div>
+          </div>
+
+          {/* Acciones de Sistema */}
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-rule/50">
             {showHelpButton && (
               <button
                 onClick={onHelp}
-                className="flex-1 py-2 px-3 rounded-xl border border-rule bg-paper text-ink-2 text-xs font-bold uppercase hover:bg-paper-3 transition"
+                className="py-2 px-2.5 rounded-xl border border-rule bg-paper text-ink-2 text-xs font-bold uppercase hover:bg-paper-3 hover:text-ink transition flex items-center justify-center gap-1.5"
               >
-                ❓ Ayuda
+                <span>❓</span>
+                <span>Ayuda</span>
               </button>
             )}
             <button
               onClick={onLogout}
-              className="py-2 px-3 rounded-xl border border-state-danger/30 bg-state-danger-bg text-state-danger text-xs font-bold uppercase hover:bg-state-danger hover:text-white transition"
+              className="py-2 px-2.5 rounded-xl border border-state-danger/30 bg-state-danger-bg text-state-danger text-xs font-bold uppercase hover:bg-state-danger hover:text-white transition flex items-center justify-center gap-1.5"
               title="Cerrar sesión"
             >
-              Salir
+              <span>🚪</span>
+              <span>Salir</span>
             </button>
           </div>
         </div>
