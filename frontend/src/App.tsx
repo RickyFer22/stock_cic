@@ -139,6 +139,17 @@ function Shell({ children, userName, onLogout, onHelp, showHelpButton }: ShellPr
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6 pb-28 md:pb-8">{children}</main>
+
+      <footer className="border-t border-rule bg-paper-2 py-4 text-xs text-ink-3">
+        <div className="mx-auto max-w-6xl px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="font-semibold text-ink-2">
+            Dirección de Modernización: <span className="font-bold text-accent">Ricardo Fernández</span>
+          </div>
+          <div className="font-medium text-ink-3">
+            Intendente Cr. Raúl Pelozo — <span className="font-semibold text-ink-2">Gestión 2025-2029</span>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

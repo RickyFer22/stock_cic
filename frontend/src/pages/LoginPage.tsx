@@ -85,7 +85,7 @@ export default function LoginPage({ onLoggedIn }: { onLoggedIn: () => void }) {
 
             <div className="mt-8 text-xs">
               <div className="font-bold text-emerald-300 uppercase tracking-wider">Soporte</div>
-              <div className="mt-1.5 leading-relaxed text-emerald-100/80">Si no podés ingresar, contactá al área de Sistemas o solicitá reseteo de contraseña.</div>
+              <div className="mt-1.5 leading-relaxed text-emerald-100/80">Si no podés ingresar, contactá con el desarrollador.</div>
             </div>
           </div>
         </section>
@@ -160,7 +160,7 @@ export default function LoginPage({ onLoggedIn }: { onLoggedIn: () => void }) {
               </button>
 
               <div className="pt-5 border-t border-rule/60 mt-6 text-xs text-ink-3 leading-relaxed text-center">
-                Si no recordás tu acceso, solicitá restablecimiento al administrador del sistema.
+                Si no recordás tu acceso, contactá con el desarrollador.
               </div>
             </form>
           </div>
