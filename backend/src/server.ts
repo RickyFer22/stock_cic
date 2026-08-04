@@ -7,6 +7,7 @@ import pinoHttp from 'pino-http'
 import { logger } from './utils/logger'
 import { apiRouter } from './routes/api.routes'
 import { errorMiddleware } from './middleware/error.middleware'
+import { ensureAuditTableExists } from './services/audit.service'
 
 const app = express()
 const PORT = Number(process.env.PORT || 4000)
@@ -54,7 +55,8 @@ app.get('/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOS
 app.use('/api', apiRouter)
 app.use(errorMiddleware)
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
+  await ensureAuditTableExists()
   logger.info({ port: PORT, env: process.env.NODE_ENV ?? 'development' }, 'Backend listo')
 })
 

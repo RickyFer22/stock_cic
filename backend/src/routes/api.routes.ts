@@ -13,6 +13,7 @@ import { alertsController } from '../controllers/alerts.controller'
 import { statisticsController } from '../controllers/statistics.controller'
 import { usersController } from '../controllers/users.controller'
 import { supportController } from '../controllers/support.controller'
+import { auditController } from '../controllers/audit.controller'
 
 export const apiRouter = Router()
 
@@ -54,10 +55,11 @@ apiRouter.put('/beneficiaries/:id', requireRole('admin', 'supervisor'), benefici
 apiRouter.get('/distributions', requireRole('admin', 'supervisor', 'operador'), distributionsController.list.bind(distributionsController))
 apiRouter.get('/distributions/:id', requireRole('admin', 'supervisor', 'operador'), distributionsController.getOne.bind(distributionsController))
 
-// Usuarios / Supervisor
+// Usuarios / Supervisor / Auditoría
 apiRouter.get('/users', requireRole('admin'), usersController.list.bind(usersController))
 apiRouter.post('/users', requireRole('admin'), usersController.create.bind(usersController))
 apiRouter.put('/users/:id', requireRole('admin'), usersController.update.bind(usersController))
+apiRouter.get('/audit-logs', requireRole('admin', 'supervisor'), auditController.list.bind(auditController))
 
 // Cierres de inventario
 apiRouter.post('/inventory/closing', requireRole('admin', 'supervisor'), stockController.createInventoryClosing.bind(stockController))

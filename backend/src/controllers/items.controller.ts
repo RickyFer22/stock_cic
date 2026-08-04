@@ -2,6 +2,8 @@ import { type Request, type Response, type NextFunction } from 'express'
 import { v4 as uuidv4 } from 'uuid'
 import { z } from 'zod'
 import { db } from '../database/connection'
+import { type AuthRequest } from '../middleware/auth.middleware'
+import { logAudit, extractAuditInfo } from '../services/audit.service'
 
 // Los nombres de artículo se guardan siempre en MAYÚSCULA (LECHE, FRAZADA, COLCHÓN...).
 // Normalizar acá cubre create, update y de paso el payload del webhook hacia Acción Social.
@@ -32,11 +34,12 @@ const updateSchema = z.object({
 })
 
 export class ItemsController {
-  async create(req: Request, res: Response, next: NextFunction) {
+  async create(req: AuthRequest, res: Response, next: NextFunction) {
     const parsed = createSchema.safeParse(req.body)
     if (!parsed.success) return res.status(400).json({ error: 'Datos inválidos.' })
 
     const payload = parsed.data
+    const auditInfo = extractAuditInfo(req)
     try {
       // Check for duplicates
       const existing = await db('items').whereRaw('LOWER(name) = ?', [payload.name.trim().toLowerCase()]).first()
@@ -60,6 +63,20 @@ export class ItemsController {
         })
         .returning('*')
 
+      await logAudit({
+        ...auditInfo,
+        action: 'CREATE',
+        entityType: 'ITEM',
+        entityId: item.id,
+        newValues: {
+          code: item.code,
+          name: item.name,
+          unit: item.unit,
+          stock_minimo: item.stock_minimo,
+          location: item.location,
+        },
+      })
+
       // Webhook: notify Acción Social to create assistance type
       try {
         const ACCION_SOCIAL_API = process.env.ACCION_SOCIAL_API_URL || 'https://accionsocial.munisanroque.ar'
@@ -81,17 +98,28 @@ export class ItemsController {
     }
   }
 
-  async update(req: Request, res: Response, next: NextFunction) {
+  async update(req: AuthRequest, res: Response, next: NextFunction) {
     const parsed = updateSchema.safeParse(req.body)
     if (!parsed.success) return res.status(400).json({ error: 'Datos inválidos.' })
 
+    const auditInfo = extractAuditInfo(req)
     try {
+      const oldItem = await db('items').where({ id: req.params.id }).first()
+      if (!oldItem) return res.status(404).json({ error: 'Ítem no encontrado.' })
+
       const [item] = await db('items')
         .where({ id: req.params.id })
         .update(parsed.data)
         .returning('*')
 
-      if (!item) return res.status(404).json({ error: 'Ítem no encontrado.' })
+      await logAudit({
+        ...auditInfo,
+        action: 'UPDATE',
+        entityType: 'ITEM',
+        entityId: item.id,
+        oldValues: oldItem,
+        newValues: item,
+      })
 
       // Webhook: notify Acción Social on update too
       try {
@@ -126,26 +154,50 @@ export class ItemsController {
     }
   }
 
-  async delete(req: Request, res: Response, next: NextFunction) {
+  async delete(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params
+      const force = req.query.force === 'true'
+      const auditInfo = extractAuditInfo(req)
 
-      // Check if it has movements
-      const moveCount = await db('stock_movements').where('item_id', id).count('id as count').first()
-      if (moveCount && Number(moveCount.count) > 0) {
-        return res.status(400).json({ error: 'No se puede eliminar el artículo porque ya tiene movimientos de stock.' })
-      }
-
-      // Check if it's used in distributions
-      const distCount = await db('distribution_items').where('item_id', id).count('id as count').first()
-      if (distCount && Number(distCount.count) > 0) {
-        return res.status(400).json({ error: 'No se puede eliminar el artículo porque es parte de distribuciones.' })
-      }
-
-      const deleted = await db('items').where('id', id).delete()
-      if (!deleted) {
+      const oldItem = await db('items').where({ id }).first()
+      if (!oldItem) {
         return res.status(404).json({ error: 'Ítem no encontrado.' })
       }
+
+      // Check if it has movements or distributions
+      const moveCountRow = await db('stock_movements').where('item_id', id).count('id as count').first()
+      const distCountRow = await db('distribution_items').where('item_id', id).count('id as count').first()
+      const moveCount = Number(moveCountRow?.count || 0)
+      const distCount = Number(distCountRow?.count || 0)
+
+      if ((moveCount > 0 || distCount > 0) && !force) {
+        return res.status(400).json({
+          error: `El artículo "${oldItem.code} - ${oldItem.name}" tiene ${moveCount} movimiento(s) y ${distCount} registro(s) de distribución.`,
+          requiresForce: true,
+          moveCount,
+          distCount,
+        })
+      }
+
+      if (force && (moveCount > 0 || distCount > 0)) {
+        await db.transaction(async (trx) => {
+          await trx('alert_acknowledgements').where('item_id', id).delete()
+          await trx('distribution_items').where('item_id', id).delete()
+          await trx('stock_movements').where('item_id', id).delete()
+          await trx('items').where('id', id).delete()
+        })
+      } else {
+        await db('items').where('id', id).delete()
+      }
+
+      await logAudit({
+        ...auditInfo,
+        action: 'DELETE',
+        entityType: 'ITEM',
+        entityId: id,
+        oldValues: oldItem,
+      })
 
       return res.json({ message: 'Artículo eliminado correctamente.' })
     } catch (err) {
@@ -155,3 +207,4 @@ export class ItemsController {
 }
 
 export const itemsController = new ItemsController()
+

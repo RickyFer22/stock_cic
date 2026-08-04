@@ -4,7 +4,7 @@ import HowToCard from '../components/HowToCard'
 import Modal from '../components/Modal'
 import Banner, { type Feedback } from '../components/Banner'
 import ConfirmDialog from '../components/ConfirmDialog'
-import { apiDownload, apiGet, apiUploadExcel, apiPost, apiDelete } from '../api/client'
+import { apiDownload, apiGet, apiUploadExcel, apiPost, apiPut, apiDelete } from '../api/client'
 import { formatNumero } from '../lib/format'
 
 type ItemRow = {
@@ -136,6 +136,27 @@ export default function ItemsPage({ role }: { role: string | null }) {
   const [deleting, setDeleting] = useState(false)
   const [exporting, setExporting] = useState<'items' | 'health' | null>(null)
 
+  // Estados para Edición y Ajuste directo
+  const [itemAEditar, setItemAEditar] = useState<ItemRow | null>(null)
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    unit: 'unidad',
+    location: '',
+    expiry_date: '',
+    stock_minimo: 0,
+    stock_maximo: '' as string | number
+  })
+  const [editLoading, setEditLoading] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+
+  const [itemAAjustar, setItemAAjustar] = useState<ItemRow | null>(null)
+  const [adjustTargetStock, setAdjustTargetStock] = useState<number>(0)
+  const [adjustNotes, setAdjustNotes] = useState<string>('')
+  const [adjustLoading, setAdjustLoading] = useState(false)
+  const [adjustError, setAdjustError] = useState<string | null>(null)
+
+  const [forceDeleteConfirm, setForceDeleteConfirm] = useState<{ item: ItemRow; message: string } | null>(null)
+
   // Artículo elegido en el ingreso, para mostrar el stock resultante antes de guardar.
   const ingresoItem = useMemo(
     () => items.find(it => it.id === ingresoData.item_id) || null,
@@ -220,17 +241,111 @@ export default function ItemsPage({ role }: { role: string | null }) {
     }
   }
 
-  async function handleDeleteItem() {
-    if (!itemAEliminar) return
+  function startEditItem(it: ItemRow) {
+    setItemAEditar(it)
+    setEditFormData({
+      name: it.name,
+      unit: it.unit,
+      location: it.location || '',
+      expiry_date: it.expiry_date ? it.expiry_date.slice(0, 10) : '',
+      stock_minimo: it.stock_minimo || 0,
+      stock_maximo: it.stock_maximo != null ? it.stock_maximo : ''
+    })
+    setEditError(null)
+  }
+
+  async function handleEditSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!itemAEditar) return
+    setEditError(null)
+    setEditLoading(true)
+    try {
+      const payload: Record<string, any> = {
+        name: editFormData.name.toUpperCase(),
+        unit: editFormData.unit || 'unidad',
+        location: editFormData.location?.trim() || null,
+        expiry_date: editFormData.expiry_date || null,
+        stock_minimo: Number(editFormData.stock_minimo) || 0,
+        stock_maximo: editFormData.stock_maximo !== '' ? Number(editFormData.stock_maximo) : null,
+      }
+      await apiPut(`/api/items/${itemAEditar.id}`, payload)
+      setItemAEditar(null)
+      loadItems()
+      setFeedback({ tone: 'success', text: `Artículo ${itemAEditar.code} — ${payload.name} actualizado correctamente.` })
+    } catch (err: any) {
+      setEditError(err.message || 'Error al actualizar el artículo.')
+    } finally {
+      setEditLoading(false)
+    }
+  }
+
+  function startAdjustStock(it: ItemRow) {
+    setItemAAjustar(it)
+    setAdjustTargetStock(it.stock_actual)
+    setAdjustNotes('Ajuste de inventario por supervisor/admin')
+    setAdjustError(null)
+  }
+
+  async function handleAdjustSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!itemAAjustar) return
+    setAdjustError(null)
+    setAdjustLoading(true)
+    try {
+      const current = itemAAjustar.stock_actual
+      const diff = adjustTargetStock - current
+      if (diff === 0) {
+        setItemAAjustar(null)
+        return
+      }
+      if (diff > 0) {
+        await apiPost('/api/stock/ingreso', {
+          item_id: itemAAjustar.id,
+          quantity: diff,
+          movement_type: 'adjustment',
+          notes: adjustNotes || 'Ajuste de stock manual'
+        })
+      } else {
+        await apiPost('/api/stock/outbound', {
+          items: [{ item_id: itemAAjustar.id, quantity: Math.abs(diff) }],
+          movement_type: 'adjustment',
+          destination: 'Ajuste de inventario',
+          notes: adjustNotes || 'Ajuste de stock manual'
+        })
+      }
+      setItemAAjustar(null)
+      loadItems()
+      setFeedback({ tone: 'success', text: `Stock del artículo ${itemAAjustar.code} ajustado a ${adjustTargetStock}.` })
+    } catch (err: any) {
+      setAdjustError(err.message || 'Error al ajustar el stock.')
+    } finally {
+      setAdjustLoading(false)
+    }
+  }
+
+  async function handleDeleteItem(force: boolean = false) {
+    const target = forceDeleteConfirm?.item || itemAEliminar
+    if (!target) return
     setDeleting(true)
     try {
-      await apiDelete(`/api/items/${itemAEliminar.id}`)
+      const url = `/api/items/${target.id}${force ? '?force=true' : ''}`
+      await apiDelete(url)
       loadItems()
-      setFeedback({ tone: 'success', text: `Artículo ${itemAEliminar.code} — ${itemAEliminar.name} eliminado correctamente.` })
+      setFeedback({ tone: 'success', text: `Artículo ${target.code} — ${target.name} eliminado correctamente.` })
       setItemAEliminar(null)
+      setForceDeleteConfirm(null)
     } catch (err: any) {
-      setFeedback({ tone: 'error', text: err.message || 'Error al eliminar el artículo.' })
-      setItemAEliminar(null)
+      if (err.requiresForce || (err.message && (err.message.includes('movimiento') || err.message.includes('distribución')))) {
+        setForceDeleteConfirm({
+          item: target,
+          message: err.message || 'El artículo posee historial de movimientos.'
+        })
+        setItemAEliminar(null)
+      } else {
+        setFeedback({ tone: 'error', text: err.message || 'Error al eliminar el artículo.' })
+        setItemAEliminar(null)
+        setForceDeleteConfirm(null)
+      }
     } finally {
       setDeleting(false)
     }
@@ -540,7 +655,21 @@ export default function ItemsPage({ role }: { role: string | null }) {
                   </td>
                   {isAdminOrSupervisor && (
                     <td className="px-5 py-4 text-right">
-                      {it.stock_actual === 0 && (
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => startEditItem(it)}
+                          className="px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-accent border border-accent/30 rounded-lg hover:bg-accent-soft transition-all"
+                          title={`Editar ${it.code} - ${it.name}`}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => startAdjustStock(it)}
+                          className="px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-300 rounded-lg hover:bg-amber-100 transition-all"
+                          title={`Ajustar stock de ${it.code}`}
+                        >
+                          Ajustar
+                        </button>
                         <button
                           onClick={() => setItemAEliminar(it)}
                           className="p-1.5 text-state-danger hover:bg-state-danger-bg rounded-lg transition-colors"
@@ -549,7 +678,7 @@ export default function ItemsPage({ role }: { role: string | null }) {
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                         </button>
-                      )}
+                      </div>
                     </td>
                   )}
                 </tr>
@@ -815,6 +944,178 @@ export default function ItemsPage({ role }: { role: string | null }) {
             </div>
           </form>
         </Modal>
+      )}
+
+      {itemAEditar && (
+        <Modal title={`Editar Artículo — ${itemAEditar.code}`} onClose={() => setItemAEditar(null)} size="md">
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            <label className="block">
+              <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Nombre del Artículo</span>
+              <input
+                required
+                value={editFormData.name}
+                onChange={e => setEditFormData({ ...editFormData, name: e.target.value })}
+                className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:outline-focus focus:border-focus outline-none font-bold"
+              />
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              <label className="block">
+                <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Unidad de Medida</span>
+                <input
+                  required
+                  value={editFormData.unit}
+                  onChange={e => setEditFormData({ ...editFormData, unit: e.target.value })}
+                  className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:outline-focus focus:border-focus outline-none"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Ubicación (Depósito)</span>
+                <input
+                  value={editFormData.location}
+                  onChange={e => setEditFormData({ ...editFormData, location: e.target.value })}
+                  className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:outline-focus focus:border-focus outline-none"
+                  placeholder="Ej: Estantería A2"
+                />
+              </label>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <label className="block">
+                <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Stock Mínimo</span>
+                <input
+                  type="number"
+                  min="0"
+                  required
+                  value={editFormData.stock_minimo}
+                  onChange={e => setEditFormData({ ...editFormData, stock_minimo: parseInt(e.target.value) || 0 })}
+                  className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:outline-focus focus:border-focus outline-none"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Stock Máximo</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={editFormData.stock_maximo}
+                  onChange={e => setEditFormData({ ...editFormData, stock_maximo: e.target.value })}
+                  className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:outline-focus focus:border-focus outline-none"
+                  placeholder="Opcional"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Fecha Vencimiento</span>
+                <input
+                  type="date"
+                  value={editFormData.expiry_date}
+                  onChange={e => setEditFormData({ ...editFormData, expiry_date: e.target.value })}
+                  className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:outline-focus focus:border-focus outline-none"
+                />
+              </label>
+            </div>
+
+            {editError && (
+              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
+                {editError}
+              </div>
+            )}
+
+            <div className="pt-4 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setItemAEditar(null)}
+                className="px-4 py-2 rounded-xl text-ink-2 font-semibold hover:bg-paper-3 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={editLoading}
+                className="px-5 py-2 rounded-xl bg-accent-strong text-accent-ink font-bold disabled:opacity-50 hover:brightness-110 transition"
+              >
+                {editLoading ? 'Guardando...' : 'Guardar Cambios'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {itemAAjustar && (
+        <Modal title={`Ajustar Stock — ${itemAAjustar.code} ${itemAAjustar.name}`} onClose={() => setItemAAjustar(null)} size="md">
+          <form onSubmit={handleAdjustSubmit} className="space-y-4">
+            <div className="bg-paper-3 p-4 rounded-xl flex items-center justify-between">
+              <div>
+                <span className="text-xs font-bold text-ink-3 uppercase tracking-wider block">Stock Actual</span>
+                <span className="text-2xl font-black text-ink">{itemAAjustar.stock_actual} {itemAAjustar.unit}</span>
+              </div>
+              <div className="text-right">
+                <span className="text-xs font-bold text-ink-3 uppercase tracking-wider block">Nuevo Stock</span>
+                <span className="text-2xl font-black text-accent">{adjustTargetStock} {itemAAjustar.unit}</span>
+              </div>
+            </div>
+
+            <label className="block">
+              <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Establecer Nuevo Stock Total</span>
+              <input
+                type="number"
+                min="0"
+                required
+                value={adjustTargetStock}
+                onChange={e => setAdjustTargetStock(parseInt(e.target.value) || 0)}
+                className="mt-1 block w-full rounded-xl border border-rule px-4 py-2.5 text-lg font-bold focus:ring-2 focus:outline-focus focus:border-focus outline-none"
+              />
+              <span className="text-xs text-ink-3 mt-1 block">
+                Diferencia:{' '}
+                <b className={adjustTargetStock - itemAAjustar.stock_actual >= 0 ? 'text-state-ok' : 'text-state-danger'}>
+                  {adjustTargetStock - itemAAjustar.stock_actual > 0 ? `+${adjustTargetStock - itemAAjustar.stock_actual}` : adjustTargetStock - itemAAjustar.stock_actual}
+                </b>
+              </span>
+            </label>
+
+            <label className="block">
+              <span className="text-xs font-bold text-ink-3 uppercase tracking-wide">Motivo / Observaciones del Ajuste</span>
+              <input
+                required
+                value={adjustNotes}
+                onChange={e => setAdjustNotes(e.target.value)}
+                className="mt-1 block w-full rounded-xl border border-rule px-4 py-2 focus:ring-2 focus:outline-focus focus:border-focus outline-none"
+                placeholder="Ej: Recuento físico de inventario de supervisor"
+              />
+            </label>
+
+            {adjustError && (
+              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
+                {adjustError}
+              </div>
+            )}
+
+            <div className="pt-4 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setItemAAjustar(null)}
+                className="px-4 py-2 rounded-xl text-ink-2 font-semibold hover:bg-paper-3 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={adjustLoading}
+                className="px-5 py-2 rounded-xl bg-amber-600 text-white font-bold disabled:opacity-50 hover:bg-amber-700 transition"
+              >
+                {adjustLoading ? 'Guardando...' : 'Aplicar Ajuste'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {forceDeleteConfirm && (
+        <ConfirmDialog
+          title="⚠️ Confirmar Eliminación Forzada"
+          message={`${forceDeleteConfirm.message}\n\n¿Estás seguro de que deseas FORZAR la eliminación de "${forceDeleteConfirm.item.code} - ${forceDeleteConfirm.item.name}"? Esta acción eliminará permanentemente el artículo y todo su historial de movimientos.`}
+          confirmLabel="Forzar Eliminación"
+          loading={deleting}
+          onConfirm={() => handleDeleteItem(true)}
+          onCancel={() => setForceDeleteConfirm(null)}
+        />
       )}
     </div>
   )

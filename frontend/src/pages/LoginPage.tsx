@@ -41,51 +41,51 @@ export default function LoginPage({ onLoggedIn }: { onLoggedIn: () => void }) {
   return (
     <div className="mx-auto max-w-5xl">
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch">
-        <section className="lg:col-span-2 relative overflow-hidden rounded-[--radius-card] border border-accent-strong bg-accent-strong shadow-[--shadow-card] text-accent-ink">
+        <section className="lg:col-span-2 relative overflow-hidden rounded-[--radius-card] border border-emerald-800 bg-emerald-950 shadow-[--shadow-card] text-white">
           <div className="absolute inset-0">
-            <div className="absolute -top-20 -left-20 h-72 w-72 rounded-full bg-accent-strong/20 blur-3xl opacity-60" />
-            <div className="absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-accent/20 blur-3xl opacity-60" />
-            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-accent via-accent to-accent-strong" />
+            <div className="absolute -top-20 -left-20 h-72 w-72 rounded-full bg-emerald-600/20 blur-3xl opacity-60" />
+            <div className="absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-emerald-400/20 blur-3xl opacity-60" />
+            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-600" />
           </div>
 
           <div className="relative p-6 h-full flex flex-col justify-between">
             <div>
               <div className="inline-flex items-center gap-4">
-                <div className="w-14 h-14 rounded-[--radius-card] bg-paper/10 text-accent flex items-center justify-center shadow-lg border border-rule">
+                <div className="w-14 h-14 rounded-[--radius-card] bg-white/10 text-white flex items-center justify-center shadow-lg border border-white/20">
                   <span className="text-2xl" aria-hidden="true">🏛</span>
                 </div>
                 <div>
-                  <div className="font-display text-accent-ink font-extrabold tracking-wide uppercase leading-tight text-lg">
+                  <div className="font-display text-white font-extrabold tracking-wide uppercase leading-tight text-lg">
                     Municipalidad<br/>de San Roque
                   </div>
-                  <div className="text-sm text-accent font-semibold tracking-wide font-body mt-0.5">
+                  <div className="text-sm text-emerald-300 font-semibold tracking-wide font-body mt-0.5">
                     DIRECCIÓN DE ACCIÓN SOCIAL
                   </div>
                 </div>
               </div>
 
-              <h2 className="mt-8 font-display font-black text-4xl text-accent-ink tracking-tight">
+              <h2 className="mt-8 font-display font-black text-4xl text-white tracking-tight">
                 {greeting}
               </h2>
-              <p className="mt-3 text-ink-3 text-sm leading-relaxed max-w-sm">
+              <p className="mt-3 text-emerald-100/90 text-sm leading-relaxed max-w-sm">
                 Accedé al Sistema de Gestión de Stock para registrar ingresos, distribuciones, cierres e importación por Excel.
               </p>
 
               <div className="mt-8 grid grid-cols-2 gap-3">
-                <div className="rounded-[--radius-card] border border-paper/10 bg-paper/5 backdrop-blur-sm px-5 py-4">
-                  <div className="text-[0.65rem] text-accent font-bold uppercase tracking-wider mb-1">Módulo</div>
-                  <div className="font-semibold text-accent-ink tracking-wide">Stock</div>
+                <div className="rounded-[--radius-card] border border-white/15 bg-white/10 backdrop-blur-sm px-5 py-4">
+                  <div className="text-[0.65rem] text-emerald-300 font-bold uppercase tracking-wider mb-1">Módulo</div>
+                  <div className="font-semibold text-white tracking-wide">Stock</div>
                 </div>
-                <div className="rounded-[--radius-card] border border-paper/10 bg-paper/5 backdrop-blur-sm px-5 py-4">
-                  <div className="text-[0.65rem] text-accent font-bold uppercase tracking-wider mb-1">Área</div>
-                  <div className="font-semibold text-accent-ink tracking-wide">Acción Social</div>
+                <div className="rounded-[--radius-card] border border-white/15 bg-white/10 backdrop-blur-sm px-5 py-4">
+                  <div className="text-[0.65rem] text-emerald-300 font-bold uppercase tracking-wider mb-1">Área</div>
+                  <div className="font-semibold text-white tracking-wide">Acción Social</div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 text-xs text-ink-3">
-              <div className="font-bold text-ink-3 uppercase tracking-wider">Soporte</div>
-              <div className="mt-1.5 leading-relaxed">Si no podés ingresar, contactá al área de Sistemas o solicitá reseteo de contraseña.</div>
+            <div className="mt-8 text-xs">
+              <div className="font-bold text-emerald-300 uppercase tracking-wider">Soporte</div>
+              <div className="mt-1.5 leading-relaxed text-emerald-100/80">Si no podés ingresar, contactá al área de Sistemas o solicitá reseteo de contraseña.</div>
             </div>
           </div>
         </section>
